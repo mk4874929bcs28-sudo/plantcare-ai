@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ lang.dashboard }} | PlantCare AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body.dashboard-page {
+            margin: 0;
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", sans-serif;
+            background: #f5f8f6;
+            color: #17251d;
+        }
+
+        .dashboard-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 255px;
+            height: 100vh;
+            background: #ffffff;
+            border-right: 1px solid #e6ece8;
+            padding: 28px 18px;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .dashboard-logo {
+            text-decoration: none;
+            color: #183d29;
+            font-size: 22px;
+            font-weight: 800;
+            padding: 0 12px 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-logo span {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #e5f5ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-logo small {
+            color: #25a55a;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .sidebar-label {
+            color: #9aa89f;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            padding: 18px 12px 8px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .sidebar-nav a {
+            text-decoration: none;
+            color: #637169;
+            padding: 12px 13px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .sidebar-nav a span {
+            width: 25px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eaf7ee;
+            color: #168447;
+        }
+
+        .language-switcher {
+            display: flex;
+            gap: 6px;
+            padding: 10px 13px 4px;
+        }
+
+        .language-btn {
+            text-decoration: none;
+            color: #637169;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #e6ece8;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            background: linear-gradient(135deg, #eff9f2, #f7fbf8);
+            border: 1px solid #dceee2;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sidebar-help-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: #d8f0df;
+            color: #18864a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+        }
+
+        .sidebar-bottom strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .sidebar-bottom small {
+            display: block;
+            color: #829087;
+            font-size: 10px;
+            margin-top: 3px;
+        }
+
+        .dashboard-main {
+            margin-left: 255px;
+            padding: 30px 40px 50px;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 28px;
+        }
+
+        .dashboard-breadcrumb {
+            color: #27a35a;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+        }
+
+        .dashboard-header h1 {
+            margin: 7px 0 5px;
+            font-size: 30px;
+            letter-spacing: -0.8px;
+        }
+
+        .dashboard-header p {
+            margin: 0;
+            color: #7a8880;
+            font-size: 14px;
+        }
+
+        .dashboard-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid #e3ebe6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 43px;
+            height: 43px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #27a65b, #0f7c3d);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .user-info strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .user-info small {
+            color: #8b978f;
+            font-size: 11px;
+        }
+
+        .detection-banner {
+            position: relative;
+            overflow: hidden;
+            min-height: 260px;
+            border-radius: 25px;
+            padding: 38px 42px;
+            color: white;
+            background:
+                radial-gradient(circle at 85% 20%,
+                rgba(255,255,255,.15),
+                transparent 28%),
+                linear-gradient(120deg, #145d35, #20864b 55%, #2e9e5b);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 18px 40px rgba(26, 116, 62, .18);
+        }
+
+        .detection-banner::after {
+            content: "";
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 50%;
+            right: 90px;
+            top: -120px;
+        }
+
+        .detection-content {
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .detection-badge {
+            display: inline-flex;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.18);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .8px;
+        }
+
+        .detection-content h2 {
+            font-size: 31px;
+            margin: 16px 0 9px;
+            letter-spacing: -.8px;
+        }
+
+        .detection-content p {
+            color: rgba(255,255,255,.82);
+            max-width: 550px;
+            line-height: 1.6;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .detection-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 13px 20px;
+            background: white;
+            color: #168047;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 13px;
+            transition: .2s ease;
+        }
+
+        .detection-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0,0,0,.14);
+        }
+
+        .detection-visual {
+            position: relative;
+            width: 230px;
+            height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .plant-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 75px;
+        }
+
+        .accuracy-card {
+            position: absolute;
+            bottom: 4px;
+            right: -2px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: white;
+            color: #173a26;
+            box-shadow: 0 10px 25px rgba(0,0,0,.15);
+        }
+
+        .accuracy-card strong {
+            display: block;
+            color: #168447;
+            font-size: 20px;
+        }
+
+        .accuracy-card span {
+            font-size: 10px;
+            color: #7b877f;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 22px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e6ece8;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: .2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(30,70,45,.07);
+        }
+
+        .stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-icon.green {
+            background: #e8f7ed;
+        }
+
+        .stat-icon.yellow {
+            background: #fff7dc;
+        }
+
+        .stat-icon.blue {
+            background: #e8f2ff;
+        }
+
+        .stat-icon.purple {
+            background: #f1eaff;
+        }
+
+        .stat-card span {
+            display: block;
+            color: #849088;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 23px;
+        }
+
+        .stat-card small {
+            color: #2a9c59;
+            font-size: 10px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border: 1px solid #e6ece8;
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .card-eyebrow {
+            color: #2a9b58;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+        }
+
+        .card-heading h3 {
+            margin: 5px 0 0;
+            font-size: 19px;
+        }
+
+        .card-heading a {
+            color: #238b4f;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .prediction-item {
+            display: grid;
+            grid-template-columns: 48px 1fr auto auto;
+            gap: 13px;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #edf1ee;
+        }
+
+        .prediction-item:last-child {
+            border-bottom: 0;
+        }
+
+        .plant-thumbnail {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: #f0f7f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        .prediction-info strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .prediction-info span {
+            display: block;
+            color: #87928c;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .prediction-status {
+            padding: 6px 9px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .prediction-status.warning {
+            color: #a96800;
+            background: #fff4d8;
+        }
+
+        .prediction-status.healthy {
+            color: #188349;
+            background: #e7f7ed;
+        }
+
+        .prediction-item > small {
+            color: #9aa49e;
+            font-size: 10px;
+        }
+
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 14px;
+            border: 1px solid #edf1ee;
+            border-radius: 14px;
+            text-decoration: none;
+            color: #1b2b21;
+            margin-bottom: 10px;
+            transition: .2s ease;
+        }
+
+        .quick-action:hover {
+            border-color: #bde2c9;
+            background: #f7fcf8;
+            transform: translateX(3px);
+        }
+
+        .quick-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #eaf7ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .quick-action strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .quick-action span {
+            display: block;
+            color: #8a958f;
+            font-size: 10px;
+            margin-top: 3px;
+        }
+
+        .quick-action b {
+            margin-left: auto;
+            color: #55a271;
+        }
+
+        .result-section {
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #dce9e0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 14px 35px rgba(30,80,45,.08);
+        }
+
+        .result-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #edf9f1, #f8fcf9);
+            border-bottom: 1px solid #e2eee6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .result-header-label {
+            color: #19874a;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .result-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speak-btn {
+            border: none;
+            background: #e1f5e8;
+            color: #157a41;
+            border-radius: 20px;
+            width: 38px;
+            height: 38px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .speak-btn:hover {
+            background: #cdeddb;
+        }
+
+        .confidence-pill {
+            padding: 8px 12px;
+            border-radius: 20px;
+            background: #e1f5e8;
+            color: #157a41;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .result-main {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 28px;
+            padding: 26px;
+        }
+
+        .result-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 18px;
+            background: #f1f5f2;
+        }
+
+        .result-content h2 {
+            margin: 5px 0;
+            font-size: 27px;
+            color: #173b26;
+        }
+
+        .result-content .plant-label {
+            color: #289658;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+        }
+
+        .confidence-bar {
+            height: 8px;
+            border-radius: 10px;
+            background: #e7eee9;
+            margin: 15px 0 20px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #25a35a, #74ca91);
+            border-radius: inherit;
+        }
+
+        .result-description {
+            color: #6f7e75;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .remedy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid #e7eee9;
+        }
+
+        .remedy-box {
+            padding: 24px;
+        }
+
+        .remedy-box + .remedy-box {
+            border-left: 1px solid #e7eee9;
+        }
+
+        .remedy-box h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+
+        .remedy-box p {
+            margin: 0;
+            color: #718078;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .remedy-title {
+            color: #1b8b4c;
+        }
+
+        .prevention-title {
+            color: #4d72a0;
+        }
+
+        .result-actions {
+            padding: 18px 24px;
+            border-top: 1px solid #e7eee9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .result-action {
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .result-action.primary {
+            color: white;
+            background: #19874a;
+        }
+
+        .result-action.secondary {
+            color: #34734e;
+            background: #edf7f0;
+        }
+
+        .dashboard-tip {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #fffdf1, #fffaf0);
+            border: 1px solid #f0e6bb;
+            border-radius: 17px;
+            padding: 17px 20px;
+            display: flex;
+            gap: 13px;
+            align-items: center;
+        }
+
+        .tip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #fff1c9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-tip strong {
+            font-size: 12px;
+        }
+
+        .dashboard-tip p {
+            margin: 4px 0 0;
+            color: #7e7b6b;
+            font-size: 11px;
+        }
+
+        @media (max-width: 1100px) {
+
+            .dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 800px) {
+
+            .dashboard-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: 0;
+                border-bottom: 1px solid #e6ece8;
+            }
+
+            .sidebar-nav {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .dashboard-main {
+                margin-left: 0;
+                padding: 22px 16px 40px;
+            }
+
+            .dashboard-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .detection-banner {
+                padding: 28px;
+            }
+
+            .detection-visual {
+                display: none;
+            }
+
+            .result-main {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .prediction-item {
+                grid-template-columns: 45px 1fr;
+            }
+
+            .prediction-status,
+            .prediction-item > small {
+                grid-column: 2;
+            }
+
+            .remedy-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .remedy-box + .remedy-box {
+                border-left: 0;
+                border-top: 1px solid #e7eee9;
+            }
+
+            .detection-content h2 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body class="dashboard-page">
+
+<aside class="dashboard-sidebar">
+
+    <a href="/" class="dashboard-logo">
+
+        <span>🌿</span>
+
+        <div>
+            PlantCare
+            <small>AI</small>
+        </div>
+
+    </a>
+
+
+    <div class="sidebar-label">
+        MAIN MENU
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="{{ url_for('dashboard') }}"
+           class="active">
+
+            <span>⌂</span>
+
+            {{ lang.dashboard }}
+
+        </a>
+
+
+        <a href="{{ url_for('detect') }}">
+
+            <span>🔍</span>
+
+            {{ lang.new_detection }}
+
+        </a>
+
+
+        <a href="{{ url_for('history') }}">
+
+            <span>🕘</span>
+
+            {{ lang.prediction_history }}
+
+        </a>
+
+
+        <a href="{{ url_for('plant_library') }}">
+
+            <span>🌱</span>
+
+            {{ lang.plant_library }}
+
+        </a>
+
+    </nav>
+
+
+    <div class="language-switcher">
+
+        <a href="{{ url_for('set_language', language='en') }}"
+           class="language-btn">
+
+            🇬🇧 {{ lang.english }}
+
+        </a>
+
+
+        <a href="{{ url_for('set_language', language='ta') }}"
+           class="language-btn">
+
+            🇮🇳 {{ lang.tamil }}
+
+        </a>
+
+    </div>
+
+
+    <div class="sidebar-label">
+
+        ACCOUNT
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="#">
+
+            <span>⚙</span>
+
+            {{ lang.settings }}
+
+        </a>
+
+
+        <a href="{{ url_for('logout') }}">
+
+            <span>↪</span>
+
+            {{ lang.logout }}
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <div class="sidebar-help-icon">
+            ?
+        </div>
+
+
+        <div>
+
+            <strong>
+                {{ lang.need_help }}
+            </strong>
+
+            <small>
+                {{ lang.explore_plantcare }}
+            </small>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<main class="dashboard-main">
+
+
+    <header class="dashboard-header">
+
+        <div>
+
+            <span class="dashboard-breadcrumb">
+
+                {{ lang.overview }}
+
+            </span>
+
+
+            <h1>
+
+                {{ lang.welcome }},
+
+                {{ session.get('full_name', 'Plant Lover') }}! 🌱
+
+            </h1>
+
+
+            <p>
+
+                {{ lang.dashboard_description }}
+
+            </p>
+
+        </div>
+
+
+        <div class="dashboard-user">
+
+            <div class="notification">
+
+                🔔
+
+            </div>
+
+
+            <div class="user-avatar">
+
+                {{ session.get('full_name', 'U')[0]|upper }}
+
+            </div>
+
+
+            <div class="user-info">
+
+                <strong>
+
+                    {{ session.get('full_name', 'User') }}
+
+                </strong>
+
+
+                <small>
+
+                    {{ lang.plant_care_member }}
+
+                </small>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <section class="detection-banner">
+
+
+        <div class="detection-content">
+
+
+            <span class="detection-badge">
+
+                ✨ {{ lang.ai_powered }}
+
+            </span>
+
+
+            <h2>
+
+                {{ lang.plant_feeling_unwell }}
+
+            </h2>
+
+
+            <p>
+
+                {{ lang.upload_clear_image }}
+
+            </p>
+
+
+            <a href="{{ url_for('detect') }}"
+               class="detection-button">
+
+                {{ lang.start_new_detection }}
+
+                <span>
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <div class="detection-visual">
+
+            <div class="plant-circle">
+
+                🌿
+
+            </div>
+
+
+            <div class="accuracy-card">
+
+                <strong>
+                    94.6%
+                </strong>
+
+                <span>
+                    {{ lang.model_accuracy }}
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <section class="dashboard-stats">
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+
+                🔬
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    {{ lang.total_predictions }}
+                </span>
+
+                <strong>
+                    {{ total_predictions }}
+                </strong>
+
+                <small>
+                    {{ lang.ai_analyses }}
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon yellow">
+
+                🌿
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    {{ lang.plants_analyzed }}
+                </span>
+
+                <strong>
+                    {{ plants_analyzed|default(0) }}
+                </strong>
+
+                <small>
+                    {{ lang.plant_varieties }}
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon blue">
+
+                ✓
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    {{ lang.healthy_plants }}
+                </span>
+
+                <strong>
+                    {{ healthy_plants|default(0) }}
+                </strong>
+
+                <small>
+                    {{ lang.healthy_results }}
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon purple">
+
+                💡
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    {{ lang.remedies_viewed }}
+                </span>
+
+                <strong>
+                    {{ remedies_viewed|default(0) }}
+                </strong>
+
+                <small>
+                    {{ lang.helpful_guidance }}
+                </small>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <div class="dashboard-chart-grid">
+
+
+        <div class="dashboard-card chart-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <span class="card-eyebrow">
+
+                        {{ lang.disease_analytics }}
+
+                    </span>
+
+
+                    <h3>
+
+                        {{ lang.disease_distribution }}
+
+                    </h3>
+
+
+                    <p>
+
+                        {{ lang.detected_plant_diseases }}
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas id="diseaseChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="dashboard-card chart-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <span class="card-eyebrow">
+
+                        {{ lang.activity }}
+
+                    </span>
+
+
+                    <h3>
+
+                        {{ lang.prediction_activity }}
+
+                    </h3>
+
+
+                    <p>
+
+                        {{ lang.your_last_7_days }}
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas id="activityChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <section class="dashboard-grid">
+
+
+        <div class="recent-predictions-list">
+
+
+            {% if recent_predictions %}
+
+
+                {% for item in recent_predictions %}
+
+
+                    <div class="prediction-item">
+
+
+                        <div class="plant-thumbnail">
+
+                            🌿
+
+                        </div>
+
+
+
+                        <div class="prediction-info">
+
+                            <strong>
+
+                                {{ item.plant_name|default(lang.plant) }}
+
+                            </strong>
+
+
+                            <span>
+
+                                {{ item.disease_name|default(lang.analysis_completed) }}
+
+                            </span>
+
+                        </div>
+
+
+
+                        {% if 'healthy' in item.disease_name|default('')|lower %}
+
+
+                            <div class="prediction-status healthy">
+
+                                {{ lang.healthy }}
+
+                            </div>
+
+
+                        {% else %}
+
+
+                            <div class="prediction-status warning">
+
+                                {{ lang.needs_attention }}
+
+                            </div>
+
+
+                        {% endif %}
+
+
+
+                        <small class="prediction-time">
+
+                            {% if item.prediction_date %}
+
+                                {{ item.prediction_date.strftime('%d %b, %I:%M %p') }}
+
+                            {% else %}
+
+                                {{ lang.recent }}
+
+                            {% endif %}
+
+                        </small>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <div class="empty-predictions">
+
+                    <div class="empty-icon">
+
+                        🌱
+
+                    </div>
+
+
+                    <h3>
+
+                        {{ lang.no_predictions }}
+
+                    </h3>
+
+
+                    <p>
+
+                        {{ lang.start_first_detection }}
+
+                    </p>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+
+
+        <div class="dashboard-card quick-card">
+
+
+            <div class="card-heading">
+
+                <div>
+
+                    <span class="card-eyebrow">
+
+                        {{ lang.quick_access }}
+
+                    </span>
+
+
+                    <h3>
+
+                        {{ lang.explore_plantcare }}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+
+            <a href="{{ url_for('detect') }}"
+               class="quick-action">
+
+
+                <div class="quick-icon">
+
+                    🔬
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+
+                        {{ lang.new_detection }}
+
+                    </strong>
+
+
+                    <span>
+
+                        {{ lang.analyze_plant_image }}
+
+                    </span>
+
+                </div>
+
+
+                <b>
+
+                    →
+
+                </b>
+
+            </a>
+
+
+        </div>
+
+    </section>
+
+
+
+
+
+
+    <section class="dashboard-tip">
+
+
+        <div class="tip-icon">
+
+            💡
+
+        </div>
+
+
+        <div>
+
+            <strong>
+
+                {{ lang.plantcare_tip }}
+
+            </strong>
+
+
+            <p>
+
+                {{ lang.tip_description }}
+
+            </p>
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    const diseaseCanvas =
+        document.getElementById("diseaseChart");
+
+
+    if (diseaseCanvas) {
+
+
+        const diseaseLabels =
+            {{ disease_labels|default([])|tojson }};
+
+
+        const diseaseCounts =
+            {{ disease_counts|default([])|tojson }};
+
+
+        new Chart(diseaseCanvas, {
+
+
+            type: "doughnut",
+
+
+            data: {
+
+                labels: diseaseLabels,
+
+
+                datasets: [{
+
+                    data: diseaseCounts,
+
+                    borderWidth: 2
+
+                }]
+
+            },
+
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: "65%",
+
+
+                plugins: {
+
+
+                    legend: {
+
+                        position: "bottom"
+
+                    },
+
+
+                    tooltip: {
+
+                        callbacks: {
+
+
+                            label: function(context) {
+
+
+                                return " " +
+
+                                    context.label +
+
+                                    ": " +
+
+                                    context.raw +
+
+                                    " {{ lang.prediction_count }}";
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+
+    const activityCanvas =
+        document.getElementById("activityChart");
+
+
+    if (activityCanvas) {
+
+
+        const activityLabels =
+            {{ activity_labels|default([])|tojson }};
+
+
+        const activityCounts =
+            {{ activity_counts|default([])|tojson }};
+
+
+        new Chart(activityCanvas, {
+
+
+            type: "line",
+
+
+            data: {
+
+
+                labels: activityLabels,
+
+
+                datasets: [{
+
+
+                    label: "{{ lang.predictions }}",
+
+
+                    data: activityCounts,
+
+
+                    borderWidth: 3,
+
+                    tension: 0.35,
+
+                    fill: false,
+
+                    pointRadius: 5
+
+                }]
+
+            },
+
+
+            options: {
+
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+
+                scales: {
+
+
+                    y: {
+
+                        beginAtZero: true,
+
+
+                        ticks: {
+
+                            precision: 0
+
+                        }
+
+                    }
+
+                },
+
+
+                plugins: {
+
+
+                    legend: {
+
+                        display: false
+
+                    },
+
+
+                    tooltip: {
+
+
+                        callbacks: {
+
+
+                            label: function(context) {
+
+
+                                return " " +
+
+                                    "{{ lang.predictions }}" +
+
+                                    ": " +
+
+                                    context.raw;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+});
+
+
+
+</script>
+
+
+</body>
+
+</html>

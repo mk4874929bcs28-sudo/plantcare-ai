@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ lang['admin_dashboard_title'] }} | PlantCare AI</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5faf7;
+        }
+
+        h1 {
+            color: #155d3a;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 8px;
+        }
+
+        .lang-switcher a {
+            text-decoration: none;
+            color: #718078;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        .lang-switcher a.active {
+            color: #155d3a;
+            background: #e5f5eb;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-top: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #e5f5eb;
+            color: #155d3a;
+        }
+
+        .admin {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+
+        .user {
+            color: #16834b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+
+        <h1>{{ lang['admin_dashboard_title'] }}</h1>
+
+        <div class="lang-switcher">
+            <a href="{{ url_for('set_language', language='en') }}"
+               class="{{ 'active' if current_language == 'en' else '' }}">EN</a>
+            <a href="{{ url_for('set_language', language='ta') }}"
+               class="{{ 'active' if current_language == 'ta' else '' }}">தமிழ்</a>
+        </div>
+
+    </div>
+
+    <p>{{ lang['welcome_administrator'] }}</p>
+
+    <div class="card">
+
+        <h2>{{ lang['registered_users'] }}</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>{{ lang['id_label'] }}</th>
+                    <th>{{ lang['full_name_label'] }}</th>
+                    <th>{{ lang['email_label'] }}</th>
+                    <th>{{ lang['role_label'] }}</th>
+                    <th>{{ lang['created_at_label'] }}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in users %}
+
+                <tr>
+                    <td>{{ user[0] }}</td>
+                    <td>{{ user[1] }}</td>
+                    <td>{{ user[2] }}</td>
+
+                    <td>
+                        {% if user[3] == 'ADMIN' %}
+                            <span class="admin">{{ lang['admin_role_label'] }}</span>
+                        {% else %}
+                            <span class="user">{{ lang['user_role_label'] }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ user[4] }}</td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+</html>

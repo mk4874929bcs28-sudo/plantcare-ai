@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>PlantCare AI | Smart Plant Health</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+          rel="stylesheet">
+
+</head>
+
+
+<body>
+
+<!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+<header class="navbar">
+
+    <div class="nav-container">
+
+        <a href="/" class="logo">
+
+            <span class="logo-icon">🌿</span>
+
+            <span>
+                Plant<span class="logo-highlight">Care</span>
+                <small>AI</small>
+            </span>
+
+        </a>
+
+
+        <nav class="nav-links">
+
+            <a href="/" class="active">
+                Home
+            </a>
+
+            <a href="#features">
+                Features
+            </a>
+
+            <a href="#how-it-works">
+                How It Works
+            </a>
+
+            <a href="#about">
+                About
+            </a>
+
+        </nav>
+
+
+        <div class="nav-actions">
+
+           <a href="{{ url_for('login') }}" class="login-btn">Login
+           </a>
+           <a href="{{ url_for('register') }}" class="signup-btn">Get Started
+            <span>→</span>
+        </a>
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     HERO SECTION
+===================================================== -->
+
+<main>
+
+<section class="hero">
+
+    <div class="hero-container">
+
+
+        <!-- LEFT CONTENT -->
+
+        <div class="hero-content">
+
+            <div class="hero-badge">
+
+                <span class="pulse"></span>
+
+                AI-Powered Plant Health
+
+            </div>
+
+
+            <h1>
+
+                Smarter Plants.
+
+                <br>
+
+                <span>Healthier Crops.</span>
+
+            </h1>
+
+
+            <p class="hero-description">
+
+                Detect plant diseases early, understand
+                symptoms, discover effective remedies,
+                and protect your crops with intelligent
+                AI-powered guidance.
+
+            </p>
+
+
+            <div class="hero-buttons">
+
+                <a href="#" class="primary-btn">
+
+                    Start Detection
+
+                    <span>→</span>
+
+                </a>
+
+
+                <a href="#how-it-works"
+                   class="secondary-btn">
+
+                    Explore How It Works
+
+                    <span>↓</span>
+
+                </a>
+
+            </div>
+
+
+            <div class="hero-trust">
+
+                <div class="trust-item">
+
+                    <strong>AI</strong>
+
+                    <span>Powered Detection</span>
+
+                </div>
+
+
+                <div class="trust-divider"></div>
+
+
+                <div class="trust-item">
+
+                    <strong>🌱</strong>
+
+                    <span>Smart Remedies</span>
+
+                </div>
+
+
+                <div class="trust-divider"></div>
+
+
+                <div class="trust-item">
+
+                    <strong>🛡</strong>
+
+                    <span>Prevention</span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- RIGHT VISUAL -->
+
+        <div class="hero-visual">
+
+
+            <div class="glow"></div>
+
+
+            <div class="plant-card">
+
+
+                <div class="plant-card-top">
+
+                    <span>
+                        Plant Analysis
+                    </span>
+
+                    <span class="status">
+                        ● AI Ready
+                    </span>
+
+                </div>
+
+
+                <div class="plant-image">
+
+                    <div class="leaf-illustration">
+
+                        🌿
+
+                    </div>
+
+                    <div class="scan-line"></div>
+
+                </div>
+
+
+                <div class="analysis-box">
+
+                    <div>
+
+                        <span class="analysis-label">
+                            AI Detection
+                        </span>
+
+                        <strong>
+                            Ready to analyze
+                        </strong>
+
+                    </div>
+
+
+                    <div class="analysis-icon">
+
+                        ✨
+
+                    </div>
+
+                </div>
+
+
+                <div class="upload-hint">
+
+                    <span>📷</span>
+
+                    Upload a leaf image to begin
+
+                </div>
+
+            </div>
+
+
+            <!-- FLOATING CARD -->
+
+            <div class="floating-card confidence-card">
+
+                <div class="floating-icon">
+                    ✓
+                </div>
+
+                <div>
+
+                    <strong>94.6%</strong>
+
+                    <span>Detection accuracy</span>
+
+                </div>
+
+            </div>
+
+
+            <div class="floating-card health-card">
+
+                <span class="health-icon">
+                    🌱
+                </span>
+
+                <div>
+
+                    <strong>Plant Health</strong>
+
+                    <span>AI assisted</span>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FEATURE SECTION
+===================================================== -->
+
+<section class="features-section"
+         id="features">
+
+    <div class="section-container">
+
+
+        <div class="section-heading">
+
+            <span class="eyebrow">
+                POWERFUL FEATURES
+            </span>
+
+            <h2>
+                Everything your plants
+                <span>need.</span>
+            </h2>
+
+            <p>
+                One intelligent platform to help you
+                understand, treat, and protect your plants.
+            </p>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+
+            <div class="feature-card">
+
+                <div class="feature-number">
+                    01
+                </div>
+
+                <div class="feature-icon">
+                    🔬
+                </div>
+
+                <h3>
+                    AI Disease Detection
+                </h3>
+
+                <p>
+                    Upload a plant leaf image and let
+                    our AI model identify possible
+                    diseases with confidence scoring.
+                </p>
+
+                <a href="#">
+                    Try Detection →
+                </a>
+
+            </div>
+
+
+
+            <div class="feature-card featured">
+
+                <div class="feature-number">
+                    02
+                </div>
+
+                <div class="feature-icon">
+                    💊
+                </div>
+
+                <h3>
+                    Smart Remedies
+                </h3>
+
+                <p>
+                    Get personalized organic and
+                    chemical treatment information
+                    based on the detected disease.
+                </p>
+
+                <a href="#">
+                    Explore Remedies →
+                </a>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <div class="feature-number">
+                    03
+                </div>
+
+                <div class="feature-icon">
+                    🛡️
+                </div>
+
+                <h3>
+                    Disease Prevention
+                </h3>
+
+                <p>
+                    Discover practical prevention
+                    strategies to reduce the risk of
+                    future plant diseases.
+                </p>
+
+                <a href="#">
+                    Learn Prevention →
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     HOW IT WORKS
+===================================================== -->
+
+<section class="how-section"
+         id="how-it-works">
+
+    <div class="section-container">
+
+
+        <div class="section-heading centered">
+
+            <span class="eyebrow">
+                SIMPLE PROCESS
+            </span>
+
+            <h2>
+                From leaf to
+                <span>solution.</span>
+            </h2>
+
+            <p>
+                Get intelligent plant health guidance
+                in four simple steps.
+            </p>
+
+        </div>
+
+
+        <div class="steps">
+
+
+            <div class="step">
+
+                <div class="step-circle">
+                    01
+                </div>
+
+                <div class="step-content">
+
+                    <h3>
+                        Upload
+                    </h3>
+
+                    <p>
+                        Upload a clear image
+                        of the affected leaf.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="step-line"></div>
+
+
+
+            <div class="step">
+
+                <div class="step-circle">
+                    02
+                </div>
+
+                <div class="step-content">
+
+                    <h3>
+                        Analyze
+                    </h3>
+
+                    <p>
+                        Our AI examines visual
+                        characteristics.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="step-line"></div>
+
+
+
+            <div class="step">
+
+                <div class="step-circle">
+                    03
+                </div>
+
+                <div class="step-content">
+
+                    <h3>
+                        Diagnose
+                    </h3>
+
+                    <p>
+                        Receive the most likely
+                        disease prediction.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="step-line"></div>
+
+
+
+            <div class="step">
+
+                <div class="step-circle">
+                    04
+                </div>
+
+                <div class="step-content">
+
+                    <h3>
+                        Treat
+                    </h3>
+
+                    <p>
+                        Get treatment and
+                        prevention guidance.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CTA
+===================================================== -->
+
+<section class="cta-section">
+
+    <div class="cta-container">
+
+        <div>
+
+            <span class="eyebrow light">
+                READY TO GET STARTED?
+            </span>
+
+            <h2>
+                Give your plants
+                the care they deserve.
+            </h2>
+
+            <p>
+                Start your first AI-powered
+                plant health analysis today.
+            </p>
+
+        </div>
+
+
+        <a href="#" class="cta-button">
+
+            Start Free Detection
+
+            <span>→</span>
+
+        </a>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer id="about">
+
+    <div class="footer-container">
+
+
+        <div class="footer-brand">
+
+            <div class="logo">
+
+                <span class="logo-icon">
+                    🌿
+                </span>
+
+                <span>
+                    Plant<span class="logo-highlight">
+                        Care
+                    </span>
+                    <small>AI</small>
+                </span>
+
+            </div>
+
+
+            <p>
+                Intelligent plant disease detection
+                and remedy guidance.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <div>
+
+                <h4>
+                    Product
+                </h4>
+
+                <a href="#">
+                    Disease Detection
+                </a>
+
+                <a href="#">
+                    Plant Explorer
+                </a>
+
+                <a href="#">
+                    Remedies
+                </a>
+
+            </div>
+
+
+            <div>
+
+                <h4>
+                    Company
+                </h4>
+
+                <a href="#">
+                    About
+                </a>
+
+                <a href="#">
+                    How It Works
+                </a>
+
+                <a href="#">
+                    Contact
+                </a>
+
+            </div>
+
+
+            <div>
+
+                <h4>
+                    Account
+                </h4>
+
+             
+<a href="{{ url_for('login') }}">
+    Login
+</a>
+
+                <a href="{{ url_for('register') }}">
+    Register
+</a>
+
+                <a href="#">
+                    Dashboard
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+        <span>
+            © 2026 PlantCare AI
+        </span>
+
+        <span>
+            Built for smarter agriculture 🌱
+        </span>
+
+    </div>
+
+</footer>
+
+
+</main>
+
+</body>
+
+</html>

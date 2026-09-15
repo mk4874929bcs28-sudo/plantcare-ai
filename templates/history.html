@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ lang['prediction_history'] }} | PlantCare AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f8f5;
+            color: #173b2a;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 45px 30px 70px;
+        }
+
+        /* HEADER */
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            gap: 25px;
+        }
+
+        .header-left small {
+            display: block;
+            color: #159447;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .header-left h1 {
+            font-size: 38px;
+            font-weight: 800;
+            color: #123d2a;
+            margin-bottom: 8px;
+        }
+
+        .header-left p {
+            color: #71837a;
+            font-size: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .lang-switcher a {
+            text-decoration: none;
+            color: #71837a;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        .lang-switcher a.active {
+            color: #158b4d;
+            background: #e8f7ee;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #dff4e8;
+            color: #168b4e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 17px;
+        }
+
+        .profile-info strong {
+            display: block;
+            color: #183c2c;
+            font-size: 14px;
+        }
+
+        .profile-info span {
+            color: #8a9a92;
+            font-size: 12px;
+            margin-top: 3px;
+            display: block;
+        }
+
+        /* HERO */
+
+        .hero {
+            background: linear-gradient(135deg, #075b35, #159456);
+            border-radius: 24px;
+            padding: 34px 38px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .hero::after {
+            content: "🌿";
+            position: absolute;
+            right: 35px;
+            bottom: -18px;
+            font-size: 100px;
+            opacity: 0.12;
+        }
+
+        .hero h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero p {
+            font-size: 15px;
+            opacity: 0.9;
+            max-width: 700px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* STAT CARDS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 38px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e2ebe5;
+            border-radius: 18px;
+            padding: 23px 25px;
+            box-shadow: 0 8px 25px rgba(30, 70, 48, 0.05);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-title {
+            color: #75867e;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: #e8f7ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-value {
+            margin-top: 12px;
+            font-size: 30px;
+            font-weight: 800;
+            color: #14884c;
+        }
+
+        /* SECTION HEADER */
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            gap: 20px;
+        }
+
+        .section-title h2 {
+            font-size: 25px;
+            color: #123d2a;
+            margin-bottom: 5px;
+        }
+
+        .section-title p {
+            font-size: 14px;
+            color: #82918a;
+        }
+
+        .search-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            width: 280px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 13px 17px 13px 43px;
+            border: 1px solid #dce7e0;
+            border-radius: 13px;
+            outline: none;
+            background: white;
+            font-size: 14px;
+            color: #234534;
+        }
+
+        .search-box input:focus {
+            border-color: #1b9654;
+            box-shadow: 0 0 0 3px rgba(27, 150, 84, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            font-size: 17px;
+        }
+
+        .mic-btn {
+            border: none;
+            background: #e8f7ee;
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            font-size: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s ease;
+        }
+
+        .mic-btn:hover {
+            background: #d3f0de;
+        }
+
+        /* HISTORY GRID */
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+        }
+
+        /* HISTORY CARD */
+
+        .history-card {
+            background: white;
+            border: 1px solid #e2ebe5;
+            border-radius: 21px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(24, 65, 43, 0.07);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 40px rgba(24, 65, 43, 0.13);
+        }
+
+        /* IMAGE */
+
+        .image-container {
+            height: 210px;
+            background: #edf3ef;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .id-badge {
+            position: absolute;
+            top: 13px;
+            right: 13px;
+            background: rgba(255, 255, 255, 0.94);
+            color: #305344;
+            padding: 7px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* CARD CONTENT */
+
+        .card-content {
+            padding: 21px;
+        }
+
+        .plant-name {
+            color: #168b4e;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .disease-name {
+            color: #183d2b;
+            font-size: 21px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            min-height: 48px;
+            line-height: 1.25;
+        }
+
+        /* DETAILS */
+
+        .details {
+            border-top: 1px solid #edf1ee;
+            border-bottom: 1px solid #edf1ee;
+            margin-bottom: 18px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 0;
+            border-bottom: 1px solid #f0f3f1;
+            gap: 10px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #819087;
+            font-size: 13px;
+        }
+
+        .detail-value {
+            color: #304b3d;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* CONFIDENCE */
+
+        .confidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 9px;
+        }
+
+        .confidence-label {
+            color: #71827a;
+            font-size: 13px;
+        }
+
+        .confidence-value {
+            color: #12874a;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e8eee9;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #168c4d, #36b96e);
+            border-radius: 20px;
+        }
+
+        /* EMPTY STATE */
+
+        .empty-state {
+            background: white;
+            border: 1px solid #e1ebe5;
+            border-radius: 22px;
+            padding: 70px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(25, 65, 43, 0.05);
+        }
+
+        .empty-icon {
+            font-size: 58px;
+            margin-bottom: 18px;
+        }
+
+        .empty-state h2 {
+            font-size: 23px;
+            color: #173d2c;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #829189;
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        .detection-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            text-decoration: none;
+            background: #158b4d;
+            color: white;
+            padding: 13px 21px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .detection-button:hover {
+            background: #0d733d;
+            transform: translateY(-2px);
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1050px) {
+            .history-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 750px) {
+
+            .page {
+                padding: 28px 18px 50px;
+            }
+
+            .top-header {
+                align-items: flex-start;
+            }
+
+            .profile {
+                display: none;
+            }
+
+            .header-left h1 {
+                font-size: 30px;
+            }
+
+            .hero {
+                padding: 27px;
+            }
+
+            .hero h2 {
+                font-size: 23px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .history-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 450px) {
+
+            .image-container {
+                height: 230px;
+            }
+
+            .card-content {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <!-- ========================= -->
+    <!-- HEADER -->
+    <!-- ========================= -->
+
+    <div class="top-header">
+
+        <div class="header-left">
+
+            <small>ACTIVITY</small>
+
+            <h1>
+                {{ lang['prediction_history'] }} 🌿
+            </h1>
+
+            <p>
+                {{ lang['review_previous_detections'] }}
+            </p>
+
+        </div>
+
+        <div class="header-right">
+
+            <div class="lang-switcher">
+                <a href="{{ url_for('set_language', language='en') }}"
+                   class="{{ 'active' if current_language == 'en' else '' }}">EN</a>
+                <a href="{{ url_for('set_language', language='ta') }}"
+                   class="{{ 'active' if current_language == 'ta' else '' }}">தமிழ்</a>
+            </div>
+
+            <div class="profile">
+
+                <div class="profile-avatar">
+                    U
+                </div>
+
+                <div class="profile-info">
+                    <strong>{{ session.get('full_name', 'User') }}</strong>
+                    <span>{{ lang['plant_care_member'] }}</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- HERO -->
+    <!-- ========================= -->
+
+    <div class="hero">
+
+        <h2>
+            {{ lang['plant_health_journey'] }}
+        </h2>
+
+        <p>
+            {{ lang['keep_track_desc'] }}
+        </p>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- STATISTICS -->
+    <!-- ========================= -->
+
+    {% set total_predictions = history|length %}
+
+    {% if total_predictions > 0 %}
+
+        {% set total_confidence = namespace(value=0) %}
+        {% set unique_plants = [] %}
+
+        {% for item in history %}
+
+            {% set total_confidence.value =
+                total_confidence.value + (item[4] or 0) %}
+
+            {% if item[2] not in unique_plants %}
+                {% set _ = unique_plants.append(item[2]) %}
+            {% endif %}
+
+        {% endfor %}
+
+        {% set average_confidence =
+            (total_confidence.value / total_predictions)|round(2) %}
+
+    {% else %}
+
+        {% set average_confidence = 0 %}
+        {% set unique_plants = [] %}
+
+    {% endif %}
+
+
+    <div class="stats">
+
+        <!-- TOTAL -->
+
+        <div class="stat-card">
+
+            <div class="stat-top">
+
+                <span class="stat-title">
+                    {{ lang['total_predictions'] }}
+                </span>
+
+                <div class="stat-icon">
+                    🔬
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ total_predictions }}
+            </div>
+
+        </div>
+
+
+        <!-- AVERAGE CONFIDENCE -->
+
+        <div class="stat-card">
+
+            <div class="stat-top">
+
+                <span class="stat-title">
+                    {{ lang['average_confidence'] }}
+                </span>
+
+                <div class="stat-icon">
+                    📊
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ average_confidence }}%
+            </div>
+
+        </div>
+
+
+        <!-- PLANTS -->
+
+        <div class="stat-card">
+
+            <div class="stat-top">
+
+                <span class="stat-title">
+                    {{ lang['plants_analyzed'] }}
+                </span>
+
+                <div class="stat-icon">
+                    🌱
+                </div>
+
+            </div>
+
+            <div class="stat-value">
+                {{ unique_plants|length }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- SECTION HEADER -->
+    <!-- ========================= -->
+
+    <div class="section-header">
+
+        <div class="section-title">
+
+            <h2>
+                {{ lang['recent_analyses'] }}
+            </h2>
+
+            <p>
+                {{ lang['latest_predictions_desc'] }}
+            </p>
+
+        </div>
+
+
+        <div class="search-row">
+
+            <div class="search-box">
+
+                <span class="search-icon">
+                    🔍
+                </span>
+
+                <input
+                    type="text"
+                    id="historySearch"
+                    placeholder="{{ lang['search_history_placeholder'] }}"
+                    onkeyup="searchHistory()"
+                >
+
+            </div>
+
+            <button
+                type="button"
+                class="mic-btn"
+                id="historyMicBtn"
+                onclick="startHistoryVoiceSearch()"
+                title="{{ lang.get('speak_to_search', 'Speak to search') }}"
+            >
+                🎤
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- HISTORY -->
+    <!-- ========================= -->
+
+    {% if history %}
+
+        <div class="history-grid" id="historyGrid">
+
+            {% for item in history %}
+
+                <div
+                    class="history-card"
+                    data-search="{{ item[2] }} {{ item[3] }}"
+                >
+
+                    <!-- IMAGE -->
+
+                    <div class="image-container">
+
+                        <img
+                            src="{{ url_for('static', filename=item[5].replace('static/', '')) }}"
+                            alt="{{ item[2] }} - {{ item[3] }}"
+                            class="history-image"
+                            onerror="this.style.display='none';"
+                        >
+
+                        <div class="id-badge">
+                            #{{ item[0] }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- CARD CONTENT -->
+
+                    <div class="card-content">
+
+                        <div class="plant-name">
+                            {{ item[2] }}
+                        </div>
+
+                        <div class="disease-name">
+                            {{ item[3] }}
+                        </div>
+
+
+                        <!-- DETAILS -->
+
+                        <div class="details">
+
+                            <div class="detail-row">
+
+                                <span class="detail-label">
+                                    {{ lang['prediction_id_label'] }}
+                                </span>
+
+                                <span class="detail-value">
+                                    #{{ item[0] }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="detail-row">
+
+                                <span class="detail-label">
+                                    {{ lang['date'] }}
+                                </span>
+
+                                <span class="detail-value">
+
+                                    {% if item[6] %}
+                                        {{ item[6].strftime('%d %b %Y') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="detail-row">
+
+                                <span class="detail-label">
+                                    {{ lang['time_label'] }}
+                                </span>
+
+                                <span class="detail-value">
+
+                                    {% if item[6] %}
+                                        {{ item[6].strftime('%I:%M %p') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONFIDENCE -->
+
+                        <div class="confidence">
+
+                            <div class="confidence-header">
+
+                                <span class="confidence-label">
+                                    {{ lang['ai_confidence_label'] }}
+                                </span>
+
+                                <span class="confidence-value">
+                                    {{ "%.2f"|format(item[4] or 0) }}%
+                                </span>
+
+                            </div>
+
+
+                            <div class="confidence-bar">
+
+                                <div
+                                    class="confidence-fill"
+                                    style="width: {{ item[4] or 0 }}%;"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- NO SEARCH RESULTS -->
+
+        <div
+            id="noResults"
+            style="
+                display:none;
+                background:white;
+                border:1px solid #e2ebe5;
+                border-radius:20px;
+                padding:50px 20px;
+                text-align:center;
+                margin-top:20px;
+            "
+        >
+
+            <div style="font-size:45px;">
+                🔎
+            </div>
+
+            <h3 style="margin-top:12px;color:#173d2c;">
+                {{ lang['no_matching_predictions'] }}
+            </h3>
+
+            <p style="margin-top:7px;color:#829189;">
+                {{ lang['try_other_search'] }}
+            </p>
+
+        </div>
+
+    {% else %}
+
+        <!-- ========================= -->
+        <!-- EMPTY HISTORY -->
+        <!-- ========================= -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                🌱
+            </div>
+
+            <h2>
+                {{ lang['history_empty_title'] }}
+            </h2>
+
+            <p>
+                {{ lang['history_empty_desc'] }}
+            </p>
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="detection-button"
+            >
+                🔬 {{ lang['start_detection'] }}
+                <span>→</span>
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ========================= -->
+<!-- SEARCH + VOICE SCRIPT -->
+<!-- ========================= -->
+
+<script>
+
+function searchHistory() {
+
+    const input =
+        document.getElementById("historySearch");
+
+    const searchText =
+        input.value.toLowerCase().trim();
+
+    const cards =
+        document.querySelectorAll(".history-card");
+
+    const noResults =
+        document.getElementById("noResults");
+
+    let visibleCount = 0;
+
+
+    cards.forEach(function(card) {
+
+        const content =
+            card.getAttribute("data-search").toLowerCase();
+
+        if (content.includes(searchText)) {
+
+            card.style.display = "";
+
+            visibleCount++;
+
+        } else {
+
+            card.style.display = "none";
+
+        }
+
+    });
+
+
+    if (noResults) {
+
+        if (visibleCount === 0 && searchText !== "") {
+
+            noResults.style.display = "block";
+
+        } else {
+
+            noResults.style.display = "none";
+
+        }
+
+    }
+
+}
+
+// ------------------------------------------------------------
+// VOICE SEARCH — speak a plant or disease name to filter history
+// ------------------------------------------------------------
+function startHistoryVoiceSearch() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert("Voice search isn't supported in this browser. Try Chrome.");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    const langMap = { 'ta': 'ta-IN', 'en': 'en-US' };
+    recognition.lang = langMap["{{ current_language }}"] || 'en-US';
+
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    const micBtn = document.getElementById('historyMicBtn');
+    micBtn.textContent = '🔴';
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('historySearch').value = transcript;
+        micBtn.textContent = '🎤';
+        searchHistory();
+    };
+
+    recognition.onerror = function() {
+        micBtn.textContent = '🎤';
+    };
+
+    recognition.onend = function() {
+        micBtn.textContent = '🎤';
+    };
+
+    recognition.start();
+}
+
+</script>
+
+</body>
+</html>
