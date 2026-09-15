@@ -20,7 +20,6 @@ static/uploads/*
 dataset/
 
 # Large ML files
-*.keras
 *.h5
 *.hdf5
 
