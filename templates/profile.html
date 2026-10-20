@@ -1,0 +1,789 @@
+
+<!DOCTYPE html>
+<html lang="{{ 'ta' if current_language == 'ta' else 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'என் சுயவிவரம் - PlantCare AI' if current_language == 'ta' else 'My Profile - PlantCare AI' }}</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            color: #123d2b;
+            background:
+                linear-gradient(rgba(25,105,55,.22), rgba(65,145,80,.28)),
+                url("{{ url_for('static', filename='plant_images/profile-bg.jpg') }}")
+                center / cover fixed no-repeat;
+        }
+
+        .navbar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 12px 36px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,.35);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,.5);
+            box-shadow: 0 8px 25px rgba(30,100,50,.12);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #0c4930;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+            background: rgba(255,255,255,.5);
+        }
+
+        .brand-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            color: #47735c;
+            margin-top: 3px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #174b34;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 12px;
+            border-radius: 12px;
+            transition: .2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            background: rgba(255,255,255,.55);
+        }
+
+        .nav-links .logout-btn {
+            background: #13834b;
+            color: white;
+        }
+
+        .page-container {
+            width: min(1150px, 94%);
+            margin: 0 auto;
+            padding: 40px 0 65px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .account-badge {
+            display: inline-block;
+            padding: 9px 15px;
+            border-radius: 30px;
+            background: rgba(255,255,255,.6);
+            color: #08713f;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .page-header h2 {
+            font-size: 38px;
+            color: #073f2a;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #365f49;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .flash-message {
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            border-radius: 13px;
+            background: rgba(220,255,232,.85);
+            border: 1px solid rgba(120,210,150,.6);
+            color: #12643b;
+            font-weight: 600;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: minmax(270px, 350px) minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .left-column,
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        .glass-card {
+            background: rgba(255,255,255,.43);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,.65);
+            box-shadow: 0 18px 45px rgba(20,80,40,.15);
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .profile-cover {
+            height: 150px;
+            position: relative;
+            background: linear-gradient(135deg, #12804b, #78bd86);
+        }
+
+        .profile-cover::after {
+            content: "🌿";
+            position: absolute;
+            right: 25px;
+            bottom: 15px;
+            font-size: 65px;
+            opacity: .3;
+        }
+
+        .profile-info {
+            padding: 75px 25px 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .avatar-wrapper {
+            position: absolute;
+            top: -65px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 125px;
+            border-radius: 50%;
+            padding: 6px;
+            background: rgba(255,255,255,.9);
+            box-shadow: 0 10px 28px rgba(0,70,35,.2);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            background: #e9f8ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 55px;
+        }
+
+        .profile-info h3 {
+            font-size: 25px;
+            color: #083e29;
+            margin-bottom: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-email {
+            color: #527465;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+            margin-bottom: 14px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 25px;
+            background: rgba(225,249,235,.85);
+            color: #08713f;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .details-list {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,.7);
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 3px;
+        }
+
+        .detail-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(235,252,242,.8);
+            font-size: 19px;
+        }
+
+        .detail-content {
+            min-width: 0;
+        }
+
+        .detail-content span {
+            display: block;
+            color: #587666;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+        }
+
+        .detail-content strong {
+            display: block;
+            color: #123d2b;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .edit-card {
+            padding: 28px;
+        }
+
+        .edit-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .edit-icon {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            background: rgba(222,249,232,.85);
+            border: 1px solid rgba(255,255,255,.7);
+        }
+
+        .edit-header h3 {
+            color: #083e29;
+            font-size: 23px;
+            margin-bottom: 5px;
+        }
+
+        .edit-header p {
+            color: #527465;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 19px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 9px;
+            color: #123d2b;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .form-input {
+            display: block;
+            width: 100%;
+            padding: 13px 15px;
+            border-radius: 12px;
+            outline: none;
+            border: 1px solid rgba(255,255,255,.9);
+            background: rgba(255,255,255,.55);
+            color: #123d2b;
+            font-size: 15px;
+            transition: .2s;
+        }
+
+        .form-input:focus {
+            border-color: #159653;
+            background: rgba(255,255,255,.85);
+            box-shadow: 0 0 0 3px rgba(25,140,80,.12);
+        }
+
+        .form-input[readonly] {
+            cursor: not-allowed;
+            background: rgba(225,240,232,.6);
+            color: #557364;
+        }
+
+        .help-text {
+            margin-top: 7px;
+            color: #587666;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .save-btn {
+            display: inline-block;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 20px;
+            background: linear-gradient(135deg, #07934e, #18aa61);
+            color: white;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(5,125,65,.2);
+            transition: .2s;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(5,125,65,.28);
+        }
+
+        .save-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .security-box {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 16px;
+            margin-top: 22px;
+            border-radius: 15px;
+            background: rgba(255,255,255,.3);
+            border: 1px solid rgba(255,255,255,.55);
+        }
+
+        .security-icon {
+            font-size: 23px;
+        }
+
+        .security-box strong {
+            display: block;
+            color: #123d2b;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .security-box p {
+            color: #547364;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 850px) {
+            .navbar {
+                padding: 12px 18px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .left-column,
+            .right-column {
+                width: 100%;
+            }
+
+            .left-column .glass-card,
+            .right-column .glass-card {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .navbar {
+                padding: 10px;
+            }
+
+            .brand-text {
+                display: none;
+            }
+
+            .nav-links {
+                gap: 2px;
+            }
+
+            .nav-links a {
+                padding: 8px;
+                font-size: 11px;
+            }
+
+            .page-container {
+                padding-top: 26px;
+            }
+
+            .page-header h2 {
+                font-size: 31px;
+            }
+
+            .edit-card {
+                padding: 20px;
+            }
+
+            .edit-header h3 {
+                font-size: 21px;
+            }
+
+            .save-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="brand">
+            <div class="brand-icon">🌱</div>
+            <div class="brand-text">
+                <h1>PlantCare AI</h1>
+                <p>
+                    {{ 'தாவர நோய் கண்டறிதல் அமைப்பு' if current_language == 'ta'
+                       else 'Plant Disease Detection System' }}
+                </p>
+            </div>
+        </a>
+
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}">
+                🏠 {{ 'முகப்புப் பலகை' if current_language == 'ta' else 'Dashboard' }}
+            </a>
+            <a href="{{ url_for('profile') }}" class="active">
+                👤 {{ 'என் சுயவிவரம்' if current_language == 'ta' else 'My Profile' }}
+            </a>
+            <a href="{{ url_for('set_language', language='en') }}">EN</a>
+            <a href="{{ url_for('set_language', language='ta') }}">தமிழ்</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">
+                ↪ {{ 'வெளியேறு' if current_language == 'ta' else 'Logout' }}
+            </a>
+        </div>
+    </nav>
+
+    <main class="page-container">
+        <section class="page-header">
+            <div class="account-badge">
+                🌿 {{ 'கணக்கு அமைப்புகள்' if current_language == 'ta' else 'Account Settings' }}
+            </div>
+
+            <h2>{{ 'என் சுயவிவரம்' if current_language == 'ta' else 'My Profile' }}</h2>
+
+            <p>
+                {{ 'உங்கள் PlantCare AI கணக்குத் தகவல்களையும் பாதுகாப்பையும் நிர்வகிக்கவும்.'
+                   if current_language == 'ta'
+                   else 'Manage your PlantCare AI account information and security.' }}
+            </p>
+        </section>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="profile-grid">
+
+            <!-- LEFT COLUMN -->
+            <div class="left-column">
+                <section class="glass-card">
+                    <div class="profile-cover"></div>
+
+                    <div class="profile-info">
+                        <div class="avatar-wrapper">
+                            {% if user[5] %}
+                                <img
+                                    class="avatar"
+                                    src="{{ url_for('static', filename=user[5]) }}"
+                                    alt="{{ 'சுயவிவரப் புகைப்படம்' if current_language == 'ta' else 'Profile photo' }}"
+                                >
+                            {% else %}
+                                <div class="avatar">👤</div>
+                            {% endif %}
+                        </div>
+
+                        <h3>{{ user[1] }}</h3>
+                        <p class="profile-email">{{ user[2] }}</p>
+
+                        <span class="role-badge">
+                            {% if current_language == 'ta' %}
+                                {{ 'நிர்வாகி' if user[3]|lower == 'admin' else 'பயனர்' if user[3]|lower == 'user' else user[3] }}
+                            {% else %}
+                                {{ user[3] }}
+                            {% endif %}
+                        </span>
+
+                        <div class="details-list">
+                            <div class="detail-row">
+                                <div class="detail-icon">🪪</div>
+                                <div class="detail-content">
+                                    <span>{{ 'பயனர் எண்' if current_language == 'ta' else 'User ID' }}</span>
+                                    <strong>{{ user[0] }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-icon">✉️</div>
+                                <div class="detail-content">
+                                    <span>{{ 'மின்னஞ்சல்' if current_language == 'ta' else 'Email' }}</span>
+                                    <strong>{{ user[2] }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-icon">🛡️</div>
+                                <div class="detail-content">
+                                    <span>{{ 'கணக்கின் பங்கு' if current_language == 'ta' else 'Account Role' }}</span>
+                                    <strong>
+                                        {% if current_language == 'ta' %}
+                                            {{ 'நிர்வாகி' if user[3]|lower == 'admin' else 'பயனர்' if user[3]|lower == 'user' else user[3] }}
+                                        {% else %}
+                                            {{ user[3] }}
+                                        {% endif %}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div class="detail-row">
+                                <div class="detail-icon">📅</div>
+                                <div class="detail-content">
+                                    <span>{{ 'உறுப்பினரான தேதி' if current_language == 'ta' else 'Member Since' }}</span>
+                                    <strong>{{ user[4] }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- READ-ONLY PROFILE DETAILS -->
+                <section class="glass-card edit-card">
+                    <div class="edit-header">
+                        <div class="edit-icon">👤</div>
+                        <div>
+                            <h3>{{ 'சுயவிவர விவரங்கள்' if current_language == 'ta' else 'Profile Details' }}</h3>
+                            <p>
+                                {{ 'உங்கள் பதிவு செய்யப்பட்ட கணக்குத் தகவல்கள்.'
+                                   if current_language == 'ta'
+                                   else 'Your registered account information.' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="display_name">
+                            {{ 'முழுப் பெயர்' if current_language == 'ta' else 'Full Name' }}
+                        </label>
+                        <input id="display_name" class="form-input"
+                               value="{{ user[1] }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="display_email">
+                            {{ 'மின்னஞ்சல் முகவரி' if current_language == 'ta' else 'Email Address' }}
+                        </label>
+                        <input id="display_email" class="form-input"
+                               type="email" value="{{ user[2] }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="display_role">
+                            {{ 'கணக்கின் பங்கு' if current_language == 'ta' else 'Account Role' }}
+                        </label>
+                        <input id="display_role" class="form-input"
+                               value="{% if current_language == 'ta' %}{{ 'நிர்வாகி' if user[3]|lower == 'admin' else 'பயனர்' if user[3]|lower == 'user' else user[3] }}{% else %}{{ user[3] }}{% endif %}"
+                               readonly>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-column">
+
+                <!-- PROFILE PHOTO UPLOAD -->
+                <section class="glass-card edit-card">
+                    <div class="edit-header">
+                        <div class="edit-icon">📷</div>
+                        <div>
+                            <h3>{{ 'சுயவிவரப் புகைப்படம்' if current_language == 'ta' else 'Profile Photo' }}</h3>
+                            <p>
+                                {{ 'உங்கள் கணக்கிற்கான புகைப்படத்தைத் தேர்ந்தெடுக்கவும்.'
+                                   if current_language == 'ta'
+                                   else 'Choose a photo for your account.' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST"
+                          action="{{ url_for('profile') }}"
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="update_photo">
+
+                        <div class="form-group">
+                            <label class="form-label" for="profile_photo">
+                                {{ 'புகைப்படத்தைத் தேர்ந்தெடுக்கவும்' if current_language == 'ta' else 'Choose Photo' }}
+                            </label>
+
+                            <input
+                                class="form-input"
+                                type="file"
+                                id="profile_photo"
+                                name="profile_photo"
+                                accept=".jpg,.jpeg,.png,.webp"
+                                required
+                            >
+
+                            <p class="help-text">
+                                {% if current_language == 'ta' %}
+                                    அனுமதிக்கப்படும் கோப்புகள்: JPG, JPEG, PNG, WEBP. அதிகபட்ச அளவு: 5 MB.
+                                {% else %}
+                                    Allowed formats: JPG, JPEG, PNG, WEBP. Maximum size: 5 MB.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <button class="save-btn" type="submit">
+                            📷 {{ 'புகைப்படத்தைப் புதுப்பிக்கவும்' if current_language == 'ta' else 'Update Photo' }}
+                        </button>
+                    </form>
+                </section>
+
+                <!-- CHANGE PASSWORD -->
+                <section class="glass-card edit-card">
+                    <div class="edit-header">
+                        <div class="edit-icon">🔐</div>
+                        <div>
+                            <h3>{{ 'கடவுச்சொல்லை மாற்றவும்' if current_language == 'ta' else 'Change Password' }}</h3>
+                            <p>
+                                {{ 'உங்கள் கணக்கைப் பாதுகாப்பாக வைத்திருக்க கடவுச்சொல்லைப் புதுப்பிக்கவும்.'
+                                   if current_language == 'ta'
+                                   else 'Update your password to keep your account secure.' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('profile') }}">
+                        <input type="hidden" name="action" value="change_password">
+
+                        <div class="form-group">
+                            <label class="form-label" for="current_password">
+                                {{ 'தற்போதைய கடவுச்சொல்' if current_language == 'ta' else 'Current Password' }}
+                            </label>
+
+                            <input
+                                class="form-input"
+                                type="password"
+                                id="current_password"
+                                name="current_password"
+                                autocomplete="current-password"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="new_password">
+                                {{ 'புதிய கடவுச்சொல்' if current_language == 'ta' else 'New Password' }}
+                            </label>
+
+                            <input
+                                class="form-input"
+                                type="password"
+                                id="new_password"
+                                name="new_password"
+                                minlength="8"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <p class="help-text">
+                                {{ 'குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்.'
+                                   if current_language == 'ta'
+                                   else 'Use at least 8 characters.' }}
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="confirm_password">
+                                {{ 'புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்' if current_language == 'ta' else 'Confirm New Password' }}
+                            </label>
+
+                            <input
+                                class="form-input"
+                                type="password"
+                                id="confirm_password"
+                                name="confirm_password"
+                                minlength="8"
+                                autocomplete="new-password"
+                                required
+                            >
+                        </div>
+
+                        <button class="save-btn" type="submit">
+                            🔒 {{ 'கடவுச்சொல்லை மாற்றவும்' if current_language == 'ta' else 'Change Password' }}
+                        </button>
+                    </form>
+
+                    <div class="security-box">
+                        <div class="security-icon">🛡️</div>
+                        <div>
+                            <strong>
+                                {{ 'கணக்குப் பாதுகாப்பு' if current_language == 'ta' else 'Account Security' }}
+                            </strong>
+                            <p>
+                                {% if current_language == 'ta' %}
+                                    உங்கள் கடவுச்சொல்லை ரகசியமாக வைத்திருங்கள். உங்கள் மின்னஞ்சலும் கணக்கின் பங்கும் மாற்ற முடியாத தகவல்களாகக் காட்டப்படுகின்றன.
+                                {% else %}
+                                    Keep your password private. Your email and account role
+                                    are displayed as read-only information.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

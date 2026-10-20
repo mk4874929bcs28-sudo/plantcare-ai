@@ -1,142 +1,1077 @@
 <!DOCTYPE html>
 <html lang="{{ current_language }}">
+
 <head>
     <meta charset="UTF-8">
-    <title>{{ lang['admin_dashboard_title'] }} | PlantCare AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background: #f5faf7;
-        }
+    <title>
+        {% if current_language == 'ta' %}
+            PlantCare AI நிர்வாக பலகை
+        {% else %}
+            PlantCare AI Admin Dashboard
+        {% endif %}
+    </title>
 
-        h1 {
-            color: #155d3a;
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+   <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-        .lang-switcher {
-            display: flex;
-            gap: 8px;
-        }
+:root {
+    --bg: #050e09;
+    --surface: #0b1911;
+    --surface-2: #10251a;
+    --border: rgba(65, 255, 128, 0.18);
+    --text: #edfff1;
+    --muted: #9ab5a1;
+    --green: #39ff88;
+    --green-dark: #12c968;
+    --red: #ff6b6b;
+}
 
-        .lang-switcher a {
-            text-decoration: none;
-            color: #718078;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 6px 10px;
-            border-radius: 8px;
-        }
+body {
+    font-family: Arial, sans-serif;
+    background:
+        radial-gradient(ellipse at top left, rgba(18, 201, 104, .10), transparent 35%),
+        radial-gradient(ellipse at bottom right, rgba(57, 255, 136, .05), transparent 35%),
+        var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
 
-        .lang-switcher a.active {
-            color: #155d3a;
-            background: #e5f5eb;
-        }
+/* TOP BAR */
+.topbar {
+    min-height: 76px;
+    background: rgba(7, 19, 12, .94);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 38px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(16px);
+}
 
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-top: 25px;
-        }
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+.brand-icon {
+    font-size: 36px;
+    filter: drop-shadow(0 0 10px rgba(57, 255, 136, .25));
+}
 
-        th, td {
-            padding: 14px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
+.brand-text h1 {
+    color: var(--green);
+    font-size: 24px;
+    letter-spacing: -.5px;
+}
 
-        th {
-            background: #e5f5eb;
-            color: #155d3a;
-        }
+.brand-text p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+}
 
-        .admin {
-            color: #8b5cf6;
-            font-weight: bold;
-        }
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        .user {
-            color: #16834b;
-            font-weight: bold;
-        }
-    </style>
+.language-btn {
+    text-decoration: none;
+    padding: 9px 13px;
+    border-radius: 10px;
+    color: var(--muted);
+    border: 1px solid transparent;
+    font-weight: bold;
+    font-size: 13px;
+    transition: .2s ease;
+}
+
+.language-btn:hover,
+.language-btn.active {
+    color: var(--green);
+    background: rgba(57, 255, 136, .09);
+    border-color: var(--border);
+}
+
+.logout-btn {
+    text-decoration: none;
+    background: linear-gradient(135deg, #16c96a, #087d43);
+    color: #031108;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    transition: .2s ease;
+}
+
+.logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 18px rgba(57, 255, 136, .22);
+}
+
+/* NOTIFICATIONS */
+.admin-notification-btn,
+.admin-notification {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    text-decoration: none !important;
+    color: var(--green);
+    transition: .2s ease;
+}
+
+.admin-notification-btn:hover,
+.admin-notification:hover {
+    background: rgba(57, 255, 136, .12);
+    transform: translateY(-2px);
+    box-shadow: 0 0 18px rgba(57, 255, 136, .12);
+}
+
+.notification-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    line-height: 1;
+}
+
+.notification-count,
+.admin-notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ff4d67;
+    color: white;
+    border: 2px solid var(--bg);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 3px 10px rgba(255, 77, 103, .25);
+}
+
+/* MAIN */
+.container {
+    max-width: 1450px;
+    margin: auto;
+    padding: 32px 38px 60px;
+}
+
+.welcome {
+    margin-bottom: 28px;
+}
+
+.welcome h2 {
+    font-size: 28px;
+    color: var(--text);
+    margin-bottom: 9px;
+    letter-spacing: -.5px;
+}
+
+.welcome p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* STAT CARDS */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    min-width: 0;
+    background: linear-gradient(145deg, rgba(16, 37, 26, .96), rgba(8, 23, 14, .98));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+    transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(57, 255, 136, .42);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .25), 0 0 20px rgba(57, 255, 136, .05);
+}
+
+.stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: rgba(57, 255, 136, .09);
+    border: 1px solid rgba(57, 255, 136, .14);
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 18px;
+    line-height: 1.5;
+}
+
+.stat-value {
+    color: var(--green);
+    font-size: 28px;
+    font-weight: 800;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+}
+
+/* ADMIN ACTIONS */
+.admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.admin-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 22px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #10251a, #0a1910);
+    color: var(--green);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-weight: 700;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .16);
+    transition: .2s ease;
+}
+
+.admin-action:hover {
+    background: rgba(57, 255, 136, .12);
+    border-color: rgba(57, 255, 136, .45);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+}
+
+/* CHARTS */
+.section-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-bottom: 24px;
+}
+
+.panel,
+.table-panel,
+.message-panel {
+    min-width: 0;
+    background: linear-gradient(145deg, rgba(11, 25, 17, .98), rgba(8, 20, 13, .98));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 23px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .17);
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.panel-header h3 {
+    font-size: 18px;
+    color: var(--text);
+}
+
+.panel-header span {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+.chart-box {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* TABLES */
+.table-panel {
+    margin-bottom: 24px;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+th {
+    background: #102b1b;
+    color: var(--green);
+    font-size: 12px;
+    padding: 14px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, .055);
+    font-size: 13px;
+    color: #c5d8ca;
+    white-space: nowrap;
+}
+
+tbody tr {
+    transition: background .18s ease;
+}
+
+tbody tr:hover td {
+    background: rgba(57, 255, 136, .045);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.healthy {
+    color: var(--green);
+    font-weight: 700;
+}
+
+.diseased {
+    color: var(--red);
+    font-weight: 700;
+}
+
+.confidence {
+    display: inline-block;
+    background: rgba(57, 255, 136, .09);
+    color: var(--green);
+    border: 1px solid rgba(57, 255, 136, .16);
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.role-admin {
+    display: inline-block;
+    background: rgba(170, 125, 255, .12);
+    color: #c7a5ff;
+    border: 1px solid rgba(170, 125, 255, .22);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.role-user {
+    display: inline-block;
+    background: rgba(57, 255, 136, .08);
+    color: var(--green);
+    border: 1px solid rgba(57, 255, 136, .15);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+/* MESSAGE PANEL — if used on this page */
+.message-panel {
+    margin-bottom: 24px;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.message-eyebrow {
+    display: block;
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 7px;
+}
+
+.message-header h3 {
+    color: var(--text);
+    font-size: 20px;
+    margin: 0 0 5px;
+}
+
+.message-header p {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.message-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 15px;
+    background: rgba(57, 255, 136, .09);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+}
+
+.message-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.message-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.message-form .form-group:nth-child(3) {
+    grid-column: 1 / -1;
+}
+
+.message-form .form-group label {
+    color: #c5d8ca;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.message-form .form-group input,
+.message-form .form-group select,
+.message-form .form-group textarea {
+    width: 100%;
+    border: 1px solid rgba(65, 255, 128, .18);
+    background: #07130c;
+    border-radius: 11px;
+    padding: 12px 14px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: .2s ease;
+}
+
+.message-form .form-group select option {
+    background: #0b1911;
+    color: var(--text);
+}
+
+.message-form .form-group input:focus,
+.message-form .form-group select:focus,
+.message-form .form-group textarea:focus {
+    border-color: var(--green-dark);
+    box-shadow: 0 0 0 3px rgba(57, 255, 136, .09);
+}
+
+.message-form .form-group textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+.message-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.send-message-btn {
+    border: none;
+    background: linear-gradient(135deg, #39ff88, #12c968);
+    color: #031108;
+    padding: 12px 22px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.send-message-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(57, 255, 136, .2);
+}
+
+/* FOCUS ACCESSIBILITY */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 3px;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    color: #718b78;
+    font-size: 12px;
+    margin-top: 35px;
+    line-height: 1.7;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .section-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .topbar {
+        padding: 12px 16px;
+        min-height: 68px;
+        gap: 10px;
+    }
+
+    .brand {
+        gap: 8px;
+    }
+
+    .brand-icon {
+        font-size: 29px;
+    }
+
+    .brand-text h1 {
+        font-size: 17px;
+    }
+
+    .brand-text p {
+        display: none;
+    }
+
+    .top-actions {
+        gap: 5px;
+    }
+
+    .language-btn {
+        padding: 8px 7px;
+        font-size: 12px;
+    }
+
+    .logout-btn {
+        display: none;
+    }
+
+    .admin-notification-btn,
+    .admin-notification {
+        width: 38px;
+        height: 38px;
+    }
+
+    .container {
+        padding: 24px 15px 40px;
+    }
+
+    .welcome h2 {
+        font-size: 23px;
+        line-height: 1.4;
+    }
+
+    .welcome p {
+        font-size: 13px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .stat-icon {
+        width: 39px;
+        height: 39px;
+        font-size: 19px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        margin-top: 13px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+
+    .panel,
+    .table-panel,
+    .message-panel {
+        padding: 16px;
+        border-radius: 15px;
+    }
+
+    .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .panel-header h3 {
+        font-size: 16px;
+    }
+
+    .panel-header span {
+        text-align: left;
+    }
+
+    .chart-box {
+        height: 260px;
+    }
+
+    .admin-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 11px;
+    }
+
+    .admin-action {
+        width: 100%;
+        padding: 14px 16px;
+    }
+
+    .message-header {
+        align-items: flex-start;
+    }
+
+    .message-form {
+        grid-template-columns: 1fr;
+    }
+
+    .message-form .form-group:nth-child(3),
+    .message-actions {
+        grid-column: auto;
+    }
+
+    .send-message-btn {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 11px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .brand-text h1 {
+        font-size: 15px;
+    }
+
+    .brand-icon {
+        font-size: 25px;
+    }
+
+    .language-btn {
+        padding: 7px 5px;
+        font-size: 11px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
-    <div class="top-bar">
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-icon">🌱</div>
+        <div class="brand-text">
+            <h1>PlantCare AI</h1>
+            <p>
+                {% if current_language == 'ta' %}
+                    நிர்வாக கட்டுப்பாட்டு பலகை
+                {% else %}
+                    Administration & Analytics
+                {% endif %}
+            </p>
+        </div>
+    </div>
 
-        <h1>{{ lang['admin_dashboard_title'] }}</h1>
+    <div class="top-actions">
+        <a href="{{ url_for('notifications') }}"
+           class="admin-notification-btn"
+           aria-label="{% if current_language == 'ta' %}அறிவிப்புகள்{% else %}Notifications{% endif %}">
+            <span class="notification-icon">🔔</span>
+            {% if unread_notifications > 0 %}
+                <span class="notification-count">
+                    {{ unread_notifications if unread_notifications < 100 else '99+' }}
+                </span>
+            {% endif %}
+        </a>
 
-        <div class="lang-switcher">
-            <a href="{{ url_for('set_language', language='en') }}"
-               class="{{ 'active' if current_language == 'en' else '' }}">EN</a>
-            <a href="{{ url_for('set_language', language='ta') }}"
-               class="{{ 'active' if current_language == 'ta' else '' }}">தமிழ்</a>
+        <a href="{{ url_for('set_language', language='en') }}"
+           class="language-btn {{ 'active' if current_language == 'en' else '' }}">
+            EN
+        </a>
+
+        <a href="{{ url_for('set_language', language='ta') }}"
+           class="language-btn {{ 'active' if current_language == 'ta' else '' }}">
+            தமிழ்
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            {% if current_language == 'ta' %}
+                வெளியேறு
+            {% else %}
+                Logout
+            {% endif %}
+        </a>
+    </div>
+</header>
+
+<main class="container">
+
+    <div class="welcome">
+        <h2>
+            {% if current_language == 'ta' %}
+                வரவேற்கிறோம், நிர்வாகி 👋
+            {% else %}
+                Welcome, Administrator 👋
+            {% endif %}
+        </h2>
+        <p>
+            {% if current_language == 'ta' %}
+                PlantCare AI அமைப்பின் பயனர்கள், கணிப்புகள், நோய்கள் மற்றும் சிகிச்சைகளை இங்கே கண்காணிக்கலாம்.
+            {% else %}
+                Monitor PlantCare AI users, predictions, diseases and remedies from one place.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">👥</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}மொத்த பயனர்கள்{% else %}Total Users{% endif %}
+            </div>
+            <div class="stat-value">{{ total_users }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">🔍</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}மொத்த கணிப்புகள்{% else %}Total Predictions{% endif %}
+            </div>
+            <div class="stat-value">{{ total_predictions }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">🦠</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}மொத்த நோய்கள்{% else %}Total Diseases{% endif %}
+            </div>
+            <div class="stat-value">{{ total_diseases }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">💊</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}மொத்த சிகிச்சைகள்{% else %}Total Remedies{% endif %}
+            </div>
+            <div class="stat-value">{{ total_remedies }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">🌿</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}ஆரோக்கியமான முடிவுகள்{% else %}Healthy Results{% endif %}
+            </div>
+            <div class="stat-value">{{ healthy_predictions }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">⚠️</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}நோய் கண்டறிதல்கள்{% else %}Diseased Results{% endif %}
+            </div>
+            <div class="stat-value">{{ diseased_predictions }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">🎯</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}சராசரி நம்பகத்தன்மை{% else %}Average Confidence{% endif %}
+            </div>
+            <div class="stat-value">{{ "%.1f"|format(avg_confidence) }}%</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon">🌱</div></div>
+            <div class="stat-label">
+                {% if current_language == 'ta' %}அமைப்பு நிலை{% else %}System Status{% endif %}
+            </div>
+            <div class="stat-value" style="font-size:20px;color:#39ff88;">
+                {% if current_language == 'ta' %}● செயல்பாட்டில்{% else %}● Online{% endif %}
+            </div>
         </div>
 
     </div>
 
-    <p>{{ lang['welcome_administrator'] }}</p>
+    <div class="admin-actions">
+        <a href="{{ url_for('admin_send_message_page') }}" class="admin-action">
+            ✉️
+            {% if current_language == 'ta' %}செய்தி அனுப்பு{% else %}Send Message{% endif %}
+        </a>
 
-    <div class="card">
+        <a href="{{ url_for('add_plant') }}" class="admin-action">
+            🌱
+            {% if current_language == 'ta' %}தாவரத்தைச் சேர்{% else %}Add Plant{% endif %}
+        </a>
+    </div>
 
-        <h2>{{ lang['registered_users'] }}</h2>
+    <div class="section-grid">
 
-        <table>
+        <div class="panel">
+            <div class="panel-header">
+                <h3>
+                    {% if current_language == 'ta' %}நோய் பகுப்பாய்வு{% else %}Disease Analytics{% endif %}
+                </h3>
+                <span>
+                    {% if current_language == 'ta' %}கணிப்பு அடிப்படையில்{% else %}Prediction distribution{% endif %}
+                </span>
+            </div>
+            <div class="chart-box"><canvas id="diseaseChart"></canvas></div>
+        </div>
 
-            <thead>
-                <tr>
-                    <th>{{ lang['id_label'] }}</th>
-                    <th>{{ lang['full_name_label'] }}</th>
-                    <th>{{ lang['email_label'] }}</th>
-                    <th>{{ lang['role_label'] }}</th>
-                    <th>{{ lang['created_at_label'] }}</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for user in users %}
-
-                <tr>
-                    <td>{{ user[0] }}</td>
-                    <td>{{ user[1] }}</td>
-                    <td>{{ user[2] }}</td>
-
-                    <td>
-                        {% if user[3] == 'ADMIN' %}
-                            <span class="admin">{{ lang['admin_role_label'] }}</span>
-                        {% else %}
-                            <span class="user">{{ lang['user_role_label'] }}</span>
-                        {% endif %}
-                    </td>
-
-                    <td>{{ user[4] }}</td>
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
+        <div class="panel">
+            <div class="panel-header">
+                <h3>
+                    {% if current_language == 'ta' %}தாவர பகுப்பாய்வு{% else %}Plant Analytics{% endif %}
+                </h3>
+                <span>
+                    {% if current_language == 'ta' %}அதிகம் பகுப்பாய்வு செய்யப்பட்டவை{% else %}Most analyzed plants{% endif %}
+                </span>
+            </div>
+            <div class="chart-box"><canvas id="plantChart"></canvas></div>
+        </div>
 
     </div>
+
+    <div class="table-panel">
+        <div class="panel-header">
+            <h3>
+                {% if current_language == 'ta' %}சமீபத்திய கணிப்புகள்{% else %}Recent Predictions{% endif %}
+            </h3>
+            <span>
+                {% if current_language == 'ta' %}கடைசி 10 பதிவுகள்{% else %}Latest 10 records{% endif %}
+            </span>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{% if current_language == 'ta' %}பயனர்{% else %}User{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}தாவரம்{% else %}Plant{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}நோய்{% else %}Disease{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}நம்பகத்தன்மை{% else %}Confidence{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}தேதி{% else %}Date{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prediction in recent_predictions %}
+                    <tr>
+                        <td>{{ prediction[0] }}</td>
+                        <td>{{ prediction[1] or ('தெரியாத பயனர்' if current_language == 'ta' else 'Unknown User') }}</td>
+                        <td>{{ prediction[2] }}</td>
+                        <td class="{% if prediction[3]|upper == 'HEALTHY' %}healthy{% else %}diseased{% endif %}">
+                            {{ prediction[3] }}
+                        </td>
+                        <td><span class="confidence">{{ "%.1f"|format(prediction[4] or 0) }}%</span></td>
+                        <td>{{ prediction[5] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:30px;">
+                            {% if current_language == 'ta' %}
+                                கணிப்பு பதிவுகள் எதுவும் இல்லை.
+                            {% else %}
+                                No prediction records available.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-panel">
+        <div class="panel-header">
+            <h3>
+                {% if current_language == 'ta' %}பதிவு செய்யப்பட்ட பயனர்கள்{% else %}Registered Users{% endif %}
+            </h3>
+            <span>
+                {{ total_users }}
+                {% if current_language == 'ta' %}பயனர்கள்{% else %}users{% endif %}
+            </span>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{% if current_language == 'ta' %}முழு பெயர்{% else %}Full Name{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}மின்னஞ்சல்{% else %}Email{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}பங்கு{% else %}Role{% endif %}</th>
+                        <th>{% if current_language == 'ta' %}பதிவு தேதி{% else %}Created At{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td>{{ user[1] }}</td>
+                        <td>{{ user[2] }}</td>
+                        <td>
+                            {% if user[3] == 'ADMIN' %}
+                                <span class="role-admin">
+                                    {% if current_language == 'ta' %}நிர்வாகி{% else %}ADMIN{% endif %}
+                                </span>
+                            {% else %}
+                                <span class="role-user">
+                                    {% if current_language == 'ta' %}பயனர்{% else %}USER{% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        🌱 PlantCare AI ·
+        {% if current_language == 'ta' %}
+            நுண்ணறிவு தாவர நோய் மேலாண்மை அமைப்பு
+        {% else %}
+            Intelligent Plant Disease Management System
+        {% endif %}
+    </div>
+
+</main>
+
+<script>
+const isTamil = {{ (current_language == 'ta') | tojson }};
+
+const diseaseLabels = {{ disease_distribution | map(attribute=0) | list | tojson }};
+const diseaseValues = {{ disease_distribution | map(attribute=1) | list | tojson }};
+const plantLabels = {{ plant_distribution | map(attribute=0) | list | tojson }};
+const plantValues = {{ plant_distribution | map(attribute=1) | list | tojson }};
+
+new Chart(document.getElementById("diseaseChart"), {
+    type: "bar",
+    data: {
+        labels: diseaseLabels,
+        datasets: [{
+            label: isTamil ? "கணிப்புகள்" : "Predictions",
+            data: diseaseValues,
+            borderWidth: 1,
+            borderRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { ticks: { maxRotation: 45, minRotation: 0 } }
+        }
+    }
+});
+
+new Chart(document.getElementById("plantChart"), {
+    type: "doughnut",
+    data: {
+        labels: plantLabels,
+        datasets: [{
+            label: isTamil ? "கணிப்புகள்" : "Predictions",
+            data: plantValues,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } }
+    }
+});
+</script>
 
 </body>
 </html>

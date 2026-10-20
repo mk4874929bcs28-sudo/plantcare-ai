@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% if current_language == 'ta' %}
+            அறிவிப்புகள் | PlantCare AI
+        {% else %}
+            Notifications | PlantCare AI
+        {% endif %}
+    </title>
+        
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #080d0a;
+    --surface: #101813;
+    --surface-2: #151f18;
+    --border: #26372b;
+    --green: #39ff88;
+    --green-dark: #19c766;
+    --text: #edf8f0;
+    --muted: #91a397;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    background:
+        radial-gradient(ellipse at top right, #12331e 0%, transparent 42%),
+        var(--bg);
+}
+
+/* NAVBAR */
+.navbar {
+    min-height: 74px;
+    background: rgba(10, 17, 12, .94);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 42px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(15px);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #173d27;
+    border: 1px solid #2c7948;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+    box-shadow: 0 0 20px #39ff881a;
+}
+
+.brand-name {
+    font-size: 25px;
+    font-weight: 800;
+    color: var(--green);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    text-decoration: none;
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    transition: .2s ease;
+}
+
+.nav-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: #14241a;
+}
+
+.logout-btn {
+    background: var(--green);
+    color: #07110a;
+    border-color: var(--green);
+}
+
+.logout-btn:hover {
+    background: #7dffad;
+    color: #07110a;
+}
+
+/* PAGE LAYOUT */
+.page {
+    max-width: 1450px;
+    margin: auto;
+    padding: 30px 34px 55px;
+    display: grid;
+    grid-template-columns: 235px minmax(0, 1fr);
+    gap: 24px;
+}
+
+.sidebar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    height: fit-content;
+    box-shadow: 0 12px 35px #00000020;
+    position: sticky;
+    top: 95px;
+}
+
+.back-btn {
+    display: block;
+    text-decoration: none;
+    color: var(--green);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 11px 13px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 22px;
+}
+
+.back-btn:hover {
+    border-color: var(--green);
+}
+
+.side-title {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.category {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 12px 11px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 5px;
+    color: #c7d6cb;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    transition: .2s ease;
+}
+
+.category-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.category-icon {
+    width: 27px;
+    text-align: center;
+    font-size: 17px;
+}
+
+.category-count {
+    min-width: 23px;
+    height: 23px;
+    padding: 0 6px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #202d24;
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.category:hover,
+.category.active {
+    background: #193323;
+    border-color: #285a39;
+    color: var(--green);
+}
+
+.category.active {
+    box-shadow: inset 3px 0 0 var(--green);
+}
+
+.category.active .category-count {
+    background: var(--green);
+    color: #061109;
+}
+
+.side-message {
+    margin-top: 35px;
+    padding: 18px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.side-message-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+/* MAIN HEADER */
+.main {
+    min-width: 0;
+}
+
+.top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+}
+
+.eyebrow {
+    color: var(--green);
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    margin-bottom: 9px;
+}
+
+.page-title {
+    font-size: 38px;
+    line-height: 1.1;
+    color: var(--text);
+    font-weight: 800;
+}
+
+.page-title span {
+    font-size: 32px;
+}
+
+.subtitle {
+    color: var(--muted);
+    margin-top: 9px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* SUMMARY CARDS */
+.summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    background: linear-gradient(145deg, #141e17, #0e1510);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 24px #00000020;
+    transition: .2s ease;
+}
+
+.summary-card:hover {
+    border-color: #367349;
+    transform: translateY(-2px);
+}
+
+.summary-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    background: #193a25;
+}
+
+.summary-card:nth-child(2) .summary-icon {
+    background: #3a2026;
+}
+
+.summary-card:nth-child(3) .summary-icon {
+    background: #202b42;
+}
+
+.summary-card:nth-child(4) .summary-icon {
+    background: #3b3020;
+}
+
+.summary-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--green);
+    overflow-wrap: anywhere;
+}
+
+.summary-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+/* TOOLBAR */
+.toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 160px;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #0a100c;
+    display: flex;
+    align-items: center;
+    padding: 0 13px;
+    gap: 8px;
+}
+
+.search-box:focus-within {
+    border-color: var(--green-dark);
+    box-shadow: 0 0 0 3px #39ff8814;
+}
+
+.search-box span {
+    font-size: 18px;
+    color: var(--green);
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.search-box input::placeholder {
+    color: #748579;
+}
+
+.filter-btn,
+.mark-all {
+    min-height: 42px;
+    padding: 0 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.filter-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.mark-all {
+    background: var(--green);
+    color: #061109;
+    border-color: var(--green);
+}
+
+.mark-all:hover {
+    background: #8bffb4;
+}
+
+/* DATE GROUP */
+.date-group {
+    margin-bottom: 20px;
+}
+
+.date-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 800;
+    margin: 10px 0;
+}
+
+.date-line {
+    width: 4px;
+    height: 21px;
+    border-radius: 5px;
+    background: var(--green);
+}
+
+/* NOTIFICATION ITEMS */
+.notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item {
+    background: linear-gradient(120deg, #121b15, #0e1510);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    min-height: 84px;
+    padding: 14px 15px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: .2s ease;
+    box-shadow: 0 6px 20px #00000020;
+}
+
+.notification-item:hover {
+    transform: translateY(-1px);
+    border-color: #3a7048;
+    box-shadow: 0 8px 24px #00000035;
+}
+
+.notification-item.unread {
+    background: linear-gradient(110deg, #14271a, #101913);
+    border-left: 4px solid var(--green);
+}
+
+.notification-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    background: #193a25;
+    border: 1px solid #294a32;
+}
+
+.notification-icon.login {
+    background: #202d43;
+    border-color: #2e4262;
+}
+
+.notification-icon.registration {
+    background: #35223c;
+    border-color: #54345e;
+}
+
+.notification-icon.message {
+    background: #3a3020;
+    border-color: #5a482b;
+}
+
+.notification-icon.alert {
+    background: #3a2223;
+    border-color: #633335;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.new-badge {
+    background: var(--green);
+    color: #061109;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.notification-message {
+    color: #a0b1a5;
+    font-size: 12px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 7px;
+    color: #829488;
+    font-size: 10px;
+}
+
+.notification-meta .sender {
+    color: #c1d2c6;
+    font-weight: 600;
+}
+
+.status-area {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.status-badge {
+    padding: 8px 13px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.status-unread {
+    background: #193b26;
+    color: var(--green);
+    border: 1px solid #2a5c39;
+}
+
+.status-read {
+    background: #202923;
+    color: #a1b0a5;
+    border: 1px solid #303d34;
+}
+
+.read-btn {
+    border: 1px solid #315c3d;
+    background: #14251a;
+    color: var(--green);
+    padding: 8px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.read-btn:hover {
+    background: #1b3b26;
+    border-color: var(--green);
+}
+
+.more-btn {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.more-btn:hover {
+    color: var(--green);
+}
+
+/* EMPTY STATE */
+.empty-state {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 70px 20px;
+    text-align: center;
+    box-shadow: 0 8px 25px #00000020;
+}
+
+.empty-icon {
+    font-size: 45px;
+    margin-bottom: 15px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* FORMS */
+form {
+    margin: 0;
+}
+
+/* ACCESSIBILITY */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 3px;
+}
+
+/* TABLET */
+@media (max-width: 1100px) {
+    .page {
+        grid-template-columns: 200px minmax(0, 1fr);
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .navbar {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+/* MOBILE */
+@media (max-width: 780px) {
+    .navbar {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        height: auto;
+    }
+
+    .brand-name {
+        font-size: 20px;
+    }
+
+    .nav-right {
+        gap: 6px;
+    }
+
+    .nav-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .page {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 20px 15px 40px;
+        gap: 18px;
+    }
+
+    .sidebar {
+        position: static;
+        display: flex;
+        gap: 5px;
+        overflow-x: auto;
+        padding: 10px;
+    }
+
+    .back-btn,
+    .side-title,
+    .side-message {
+        display: none;
+    }
+
+    .category {
+        min-width: 125px;
+        margin: 0;
+    }
+
+    .top-section {
+        flex-direction: column;
+    }
+
+    .toolbar {
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex-basis: 100%;
+    }
+
+    .notification-item {
+        align-items: flex-start;
+    }
+
+    .status-area {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .read-btn {
+        padding: 7px;
+    }
+}
+
+/* SMALL MOBILE */
+@media (max-width: 520px) {
+    .navbar {
+        gap: 10px;
+    }
+
+    .brand-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+    }
+
+    .brand-name {
+        font-size: 17px;
+    }
+
+    .nav-right {
+        width: 100%;
+    }
+
+    .nav-btn {
+        padding: 8px 9px;
+    }
+
+    .page-title {
+        font-size: 30px;
+    }
+
+    .page-title span {
+        font-size: 25px;
+    }
+
+    .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .summary-card {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .summary-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .summary-value {
+        font-size: 19px;
+    }
+
+    .notification-item {
+        gap: 10px;
+        padding: 12px 10px;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        font-size: 19px;
+    }
+
+    .notification-title {
+        font-size: 13px;
+    }
+
+    .notification-message {
+        white-space: normal;
+    }
+
+    .status-badge,
+    .read-btn {
+        display: none;
+    }
+
+    .filter-btn,
+    .mark-all {
+        flex: 1;
+        padding: 0 9px;
+        font-size: 11px;
+    }
+}
+</style>
+
+   
+</head>
+
+
+<body>
+
+<header class="navbar">
+    <div class="brand">
+        <div class="brand-icon">🌱</div>
+        <div class="brand-name">PlantCare AI</div>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('dashboard') }}" class="nav-btn">
+            {% if current_language == 'ta' %}← முகப்புப் பலகை{% else %}← Dashboard{% endif %}
+        </a>
+
+        <a href="{{ url_for('set_language', language='en') }}" class="nav-btn">EN</a>
+        <a href="{{ url_for('set_language', language='ta') }}" class="nav-btn">தமிழ்</a>
+
+        <a href="{{ url_for('logout') }}" class="nav-btn logout-btn">
+            {% if current_language == 'ta' %}வெளியேறு{% else %}Logout{% endif %}
+        </a>
+    </div>
+</header>
+
+<div class="page">
+
+    <aside class="sidebar">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">
+            {% if current_language == 'ta' %}← முகப்புப் பலகைக்குத் திரும்பு{% else %}← Back to Dashboard{% endif %}
+        </a>
+
+        <div class="side-title">
+            {% if current_language == 'ta' %}அறிவிப்பு வகைகள்{% else %}Notification Categories{% endif %}
+        </div>
+
+        <button class="category active" onclick="filterNotifications('all', this)">
+            <div class="category-left">
+                <span class="category-icon">🔔</span>
+                <span>{% if current_language == 'ta' %}அனைத்து அறிவிப்புகள்{% else %}All Notifications{% endif %}</span>
+            </div>
+            <span class="category-count">{{ notifications|length }}</span>
+        </button>
+
+        <button class="category" onclick="filterNotifications('unread', this)">
+            <div class="category-left">
+                <span class="category-icon">✉</span>
+                <span>{% if current_language == 'ta' %}படிக்காதவை{% else %}Unread{% endif %}</span>
+            </div>
+            <span class="category-count" id="unreadCount">0</span>
+        </button>
+
+        <button class="category" onclick="filterNotifications('prediction', this)">
+            <div class="category-left">
+                <span class="category-icon">🌱</span>
+                <span>{% if current_language == 'ta' %}கணிப்புகள்{% else %}Predictions{% endif %}</span>
+            </div>
+            <span class="category-count">
+                {{ notifications|selectattr('3', 'equalto', 'prediction')|list|length }}
+            </span>
+        </button>
+
+        <button class="category" onclick="filterNotifications('useractivity', this)">
+            <div class="category-left">
+                <span class="category-icon">👥</span>
+                <span>{% if current_language == 'ta' %}பயனர் செயல்பாடுகள்{% else %}User Activity{% endif %}</span>
+            </div>
+            <span class="category-count" id="activityCount">0</span>
+        </button>
+
+        <button class="category" onclick="filterNotifications('message', this)">
+            <div class="category-left">
+                <span class="category-icon">💬</span>
+                <span>{% if current_language == 'ta' %}செய்திகள்{% else %}Messages{% endif %}</span>
+            </div>
+            <span class="category-count" id="messageCount">0</span>
+        </button>
+
+        <button class="category" onclick="filterNotifications('alert', this)">
+            <div class="category-left">
+                <span class="category-icon">⚠</span>
+                <span>{% if current_language == 'ta' %}அமைப்பு எச்சரிக்கைகள்{% else %}System Alerts{% endif %}</span>
+            </div>
+            <span class="category-count" id="alertCount">0</span>
+        </button>
+
+        <div class="side-message">
+            <div class="side-message-icon">🌿</div>
+            <strong>
+                {% if current_language == 'ta' %}ஆரோக்கியமான தாவரங்கள்{% else %}Healthy Plants{% endif %}
+            </strong>
+            <br>
+            {% if current_language == 'ta' %}மகிழ்ச்சியான நாளை{% else %}Happier Tomorrow{% endif %}
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <div class="top-section">
+            <div>
+                <div class="eyebrow">
+                    {% if current_language == 'ta' %}அறிவிப்பு மையம்{% else %}NOTIFICATION CENTER{% endif %}
+                </div>
+
+                <h1 class="page-title">
+                    {% if current_language == 'ta' %}அறிவிப்புகள்{% else %}Notifications{% endif %}
+                    <span>🔔</span>
+                </h1>
+
+                <p class="subtitle">
+                    {% if current_language == 'ta' %}
+                        PlantCare AI செயல்பாடுகள் மற்றும் முக்கிய எச்சரிக்கைகள் பற்றிய புதுப்பிப்புகளைப் பெறுங்கள்.
+                    {% else %}
+                        Stay updated with your PlantCare AI activity and important alerts.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% set total_count = notifications|length %}
+
+        <div class="summary">
+
+            <div class="summary-card">
+                <div class="summary-icon">🔔</div>
+                <div>
+                    <div class="summary-value">{{ total_count }}</div>
+                    <div class="summary-label">
+                        {% if current_language == 'ta' %}மொத்த அறிவிப்புகள்{% else %}Total Notifications{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">✉</div>
+                <div>
+                    <div class="summary-value" id="summaryUnread">0</div>
+                    <div class="summary-label">
+                        {% if current_language == 'ta' %}படிக்காதவை{% else %}Unread{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">✓</div>
+                <div>
+                    <div class="summary-value" id="summaryRead">0</div>
+                    <div class="summary-label">
+                        {% if current_language == 'ta' %}படித்தவை{% else %}Read{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon">📅</div>
+                <div>
+                    <div class="summary-value" style="font-size:14px;" id="latestDate">--</div>
+                    <div class="summary-label">
+                        {% if current_language == 'ta' %}சமீபத்திய செயல்பாடு{% else %}Latest Activity{% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="toolbar">
+
+            <div class="search-box">
+                <span>⌕</span>
+                <input type="text"
+                       id="searchInput"
+                       placeholder="{% if current_language == 'ta' %}அறிவிப்புகளைத் தேடுங்கள்...{% else %}Search notifications...{% endif %}"
+                       onkeyup="searchNotifications()">
+            </div>
+
+            <button class="filter-btn" id="sortButton" onclick="sortNotifications()">
+                ↕ {% if current_language == 'ta' %}புதியவை முதலில்{% else %}Newest First{% endif %}
+            </button>
+
+            <form method="POST" action="{{ url_for('mark_all_notifications_read') }}">
+                <button class="mark-all" type="submit">
+                    ✓ {% if current_language == 'ta' %}அனைத்தையும் படித்ததாகக் குறிக்கவும்{% else %}Mark all as read{% endif %}
+                </button>
+            </form>
+
+        </div>
+
+        <div id="notificationContainer">
+
+            {% if notifications %}
+
+                {% for notification in notifications %}
+                    {% set notification_type = notification[3]|lower %}
+
+                    <div class="notification-item {% if notification[4] == 0 %}unread{% endif %}"
+                         data-type="{{ notification_type }}"
+                         data-read="{{ notification[4] }}"
+                         data-title="{{ notification[1]|lower }}"
+                         data-message="{{ notification[2]|lower }}"
+                         data-date="{{ notification[5] }}">
+
+                        <div class="notification-icon
+                            {% if notification_type == 'login' %}login
+                            {% elif notification_type == 'registration' %}registration
+                            {% elif notification_type == 'message' %}message
+                            {% elif notification_type == 'alert' %}alert
+                            {% endif %}">
+
+                            {% if notification_type == 'prediction' %}🌱
+                            {% elif notification_type == 'login' %}👋
+                            {% elif notification_type == 'registration' %}👤
+                            {% elif notification_type == 'message' %}💬
+                            {% elif notification_type == 'alert' %}⚠️
+                            {% elif notification_type == 'remedy' %}💊
+                            {% else %}🔔
+                            {% endif %}
+                        </div>
+
+                        <div class="notification-content">
+                            <div class="notification-title">
+                                {{ notification[1] }}
+
+                                {% if notification[4] == 0 %}
+                                    <span class="new-badge">
+                                        {% if current_language == 'ta' %}புதியது{% else %}New{% endif %}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="notification-message">
+                                {{ notification[2] }}
+                            </div>
+
+                            <div class="notification-meta">
+                                <span class="sender">
+                                    {% if notification_type in ['login', 'registration'] %}
+                                        👤 {% if current_language == 'ta' %}பயனர்{% else %}User{% endif %}
+                                    {% elif notification_type == 'prediction' %}
+                                        🌱 PlantCare AI
+                                    {% elif notification_type == 'message' %}
+                                        💬 {% if current_language == 'ta' %}நிர்வாகி{% else %}Admin{% endif %}
+                                    {% else %}
+                                        🔔 PlantCare AI
+                                    {% endif %}
+                                </span>
+                                <span>•</span>
+                                <span>🕒 {{ notification[5] }}</span>
+                            </div>
+                        </div>
+
+                        <div class="status-area">
+
+                            {% if notification[4] == 0 %}
+                                <span class="status-badge status-unread">
+                                    {% if current_language == 'ta' %}படிக்காதது{% else %}Unread{% endif %}
+                                </span>
+
+                                <form method="POST"
+                                      action="{{ url_for('mark_notification_read', notification_id=notification[0]) }}">
+                                    <button type="submit" class="read-btn">
+                                        ✓ {% if current_language == 'ta' %}படித்ததாகக் குறிக்கவும்{% else %}Mark as read{% endif %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="status-badge status-read">
+                                    {% if current_language == 'ta' %}படிக்கப்பட்டது{% else %}Read{% endif %}
+                                </span>
+                            {% endif %}
+
+                            <button class="more-btn" type="button" aria-label="More options">⋮</button>
+                        </div>
+
+                    </div>
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-state">
+                    <div class="empty-icon">🔔</div>
+                    <h3>
+                        {% if current_language == 'ta' %}அனைத்து அறிவிப்புகளையும் பார்த்துவிட்டீர்கள்!{% else %}You're all caught up!{% endif %}
+                    </h3>
+                    <p>
+                        {% if current_language == 'ta' %}
+                            இப்போது அறிவிப்புகள் எதுவும் இல்லை. முக்கியமான புதுப்பிப்புகள் வந்தால் உங்களுக்குத் தெரிவிப்போம்.
+                        {% else %}
+                            No notifications right now. We'll let you know when something important happens.
+                        {% endif %}
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </main>
+</div>
+
+<script>
+const isTamil = {{ (current_language == 'ta')|tojson }};
+const items = Array.from(document.querySelectorAll(".notification-item"));
+
+function updateCounts() {
+    let unread = 0, read = 0, activity = 0, messages = 0, alerts = 0;
+
+    items.forEach(item => {
+        const type = item.dataset.type;
+        const isUnread = item.dataset.read === "0";
+
+        if (isUnread) unread++;
+        else read++;
+
+        if (type === "login" || type === "registration") activity++;
+        if (type === "message") messages++;
+        if (type === "alert") alerts++;
+    });
+
+    document.getElementById("unreadCount").innerText = unread;
+    document.getElementById("summaryUnread").innerText = unread;
+    document.getElementById("summaryRead").innerText = read;
+    document.getElementById("activityCount").innerText = activity;
+    document.getElementById("messageCount").innerText = messages;
+    document.getElementById("alertCount").innerText = alerts;
+
+    if (items.length > 0) {
+        document.getElementById("latestDate").innerText = items[0].dataset.date;
+    }
+}
+
+updateCounts();
+
+function filterNotifications(category, button) {
+    document.querySelectorAll(".category").forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+
+    items.forEach(item => {
+        const type = item.dataset.type;
+        let show = true;
+
+        if (category === "unread") show = item.dataset.read === "0";
+        else if (category === "prediction") show = type === "prediction";
+        else if (category === "useractivity") show = type === "login" || type === "registration";
+        else if (category === "message") show = type === "message";
+        else if (category === "alert") show = type === "alert";
+
+        item.style.display = show ? "flex" : "none";
+    });
+}
+
+function searchNotifications() {
+    const query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    items.forEach(item => {
+        const title = item.dataset.title;
+        const message = item.dataset.message;
+        item.style.display = title.includes(query) || message.includes(query) ? "flex" : "none";
+    });
+}
+
+let newestFirst = true;
+
+function sortNotifications() {
+    const container = document.getElementById("notificationContainer");
+    const currentItems = Array.from(container.querySelectorAll(".notification-item"));
+
+    currentItems.sort((a, b) => {
+        const dateA = new Date(a.dataset.date);
+        const dateB = new Date(b.dataset.date);
+        return newestFirst ? dateB - dateA : dateA - dateB;
+    });
+
+    newestFirst = !newestFirst;
+
+    currentItems.forEach(item => container.appendChild(item));
+
+    document.getElementById("sortButton").innerText =
+        newestFirst
+            ? (isTamil ? "↕ புதியவை முதலில்" : "↕ Newest First")
+            : (isTamil ? "↕ பழையவை முதலில்" : "↕ Oldest First");
+}
+</script>
+
+</body>
+</html>

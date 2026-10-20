@@ -1,147 +1,182 @@
+
 <!DOCTYPE html>
-<html lang="{{ current_language }}">
+<html lang="{{ current_language|default('en') }}">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>{{ lang.dashboard }} | PlantCare AI</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
-
         * {
             box-sizing: border-box;
         }
 
+        :root {
+            --bg: #080d0a;
+            --surface: #101813;
+            --surface-2: #151f18;
+            --border: #243329;
+            --text: #edf7ef;
+            --muted: #91a397;
+            --green: #a3ff6b;
+            --green-2: #56d364;
+            --green-dark: #172a1c;
+            --radius: 20px;
+        }
+
         body.dashboard-page {
             margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 75% 0%, #14271a 0%, transparent 38%),
+                var(--bg);
+            color: var(--text);
             font-family: Inter, -apple-system, BlinkMacSystemFont,
                          "Segoe UI", sans-serif;
-            background: #f5f8f6;
-            color: #17251d;
         }
+
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* SIDEBAR */
 
         .dashboard-sidebar {
             position: fixed;
-            left: 0;
-            top: 0;
+            inset: 0 auto 0 0;
             width: 255px;
             height: 100vh;
-            background: #ffffff;
-            border-right: 1px solid #e6ece8;
-            padding: 28px 18px;
+            overflow-y: auto;
+            background: rgba(13, 20, 15, .97);
+            border-right: 1px solid var(--border);
+            padding: 25px 17px;
             display: flex;
             flex-direction: column;
             z-index: 100;
         }
 
         .dashboard-logo {
-            text-decoration: none;
-            color: #183d29;
-            font-size: 22px;
-            font-weight: 800;
-            padding: 0 12px 30px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 11px;
+            padding: 0 10px 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 800;
         }
 
-        .dashboard-logo span {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            background: #e5f5ea;
+        .dashboard-logo > span {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 13px;
+            background: var(--green);
+            color: #0b160b;
+            font-size: 22px;
+            box-shadow: 0 0 24px rgba(163, 255, 107, .15);
         }
 
         .dashboard-logo small {
-            color: #25a55a;
-            font-size: 12px;
-            margin-top: 5px;
+            display: block;
+            color: var(--green);
+            font-size: 11px;
+            margin-top: 3px;
+            letter-spacing: 2px;
         }
 
         .sidebar-label {
-            color: #9aa89f;
+            padding: 18px 12px 10px;
+            color: #647568;
             font-size: 10px;
             font-weight: 800;
-            letter-spacing: 1.4px;
-            padding: 18px 12px 8px;
+            letter-spacing: 1.7px;
         }
 
         .sidebar-nav {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
         .sidebar-nav a {
-            text-decoration: none;
-            color: #637169;
-            padding: 12px 13px;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 14px;
+            padding: 12px 13px;
+            color: #a1b0a4;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 13px;
             font-weight: 600;
-            transition: 0.2s ease;
+            transition: .2s ease;
         }
 
         .sidebar-nav a span {
-            width: 25px;
+            width: 23px;
             text-align: center;
             font-size: 16px;
         }
 
         .sidebar-nav a:hover,
         .sidebar-nav a.active {
-            background: #eaf7ee;
-            color: #168447;
+            background: rgba(163, 255, 107, .09);
+            border-color: rgba(163, 255, 107, .13);
+            color: var(--green);
         }
 
         .language-switcher {
             display: flex;
-            gap: 6px;
-            padding: 10px 13px 4px;
+            flex-wrap: wrap;
+            gap: 7px;
+            padding: 10px 12px;
         }
 
         .language-btn {
+            color: #9cad9f;
             text-decoration: none;
-            color: #637169;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             padding: 8px 10px;
-            border-radius: 10px;
-            border: 1px solid #e6ece8;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            transition: .2s ease;
+        }
+
+        .language-btn:hover {
+            color: var(--green);
+            border-color: var(--green);
         }
 
         .sidebar-bottom {
-            margin-top: auto;
-            background: linear-gradient(135deg, #eff9f2, #f7fbf8);
-            border: 1px solid #dceee2;
-            border-radius: 16px;
-            padding: 14px;
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 10px;
+            margin-top: auto;
+            padding: 14px;
+            border: 1px solid #2b4430;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #17271a, #101a13);
         }
 
         .sidebar-help-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 34px;
             height: 34px;
+            flex-shrink: 0;
             border-radius: 10px;
-            background: #d8f0df;
-            color: #18864a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #243e26;
+            color: var(--green);
             font-weight: 800;
         }
 
@@ -152,319 +187,446 @@
 
         .sidebar-bottom small {
             display: block;
-            color: #829087;
+            margin-top: 4px;
+            color: var(--muted);
             font-size: 10px;
-            margin-top: 3px;
+            line-height: 1.5;
         }
 
+        /* MAIN LAYOUT */
+
         .dashboard-main {
-            margin-left: 255px;
-            padding: 30px 40px 50px;
             min-height: 100vh;
+            margin-left: 255px;
+            padding: 32px 38px 48px;
+            max-width: 1800px;
         }
 
         .dashboard-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 25px;
+            justify-content: space-between;
+            gap: 22px;
             margin-bottom: 28px;
         }
 
         .dashboard-breadcrumb {
-            color: #27a35a;
-            font-size: 11px;
+            color: var(--green);
+            font-size: 10px;
             font-weight: 800;
-            letter-spacing: 1.2px;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
         }
 
         .dashboard-header h1 {
-            margin: 7px 0 5px;
-            font-size: 30px;
-            letter-spacing: -0.8px;
+            margin: 9px 0 7px;
+            font-size: clamp(23px, 2.4vw, 31px);
+            line-height: 1.25;
+            letter-spacing: -.8px;
         }
 
         .dashboard-header p {
             margin: 0;
-            color: #7a8880;
-            font-size: 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .dashboard-user {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
 
         .notification {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: white;
-            border: 1px solid #e3ebe6;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: var(--surface);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: .2s ease;
+        }
+
+        .notification:hover {
+            border-color: var(--green);
+            background: var(--surface-2);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ff555f;
+            color: #fff;
+            border-radius: 99px;
+            border: 2px solid var(--bg);
+            font-size: 10px;
+            font-weight: 800;
         }
 
         .user-avatar {
-            width: 43px;
-            height: 43px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #27a65b, #0f7c3d);
-            color: white;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--green), var(--green-2));
+            color: #102010;
+            font-weight: 900;
+            font-size: 17px;
         }
 
         .user-info strong {
             display: block;
-            font-size: 13px;
+            max-width: 150px;
+            overflow: hidden;
+            color: var(--text);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .user-info small {
-            color: #8b978f;
-            font-size: 11px;
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10px;
         }
+
+        /* DETECTION BANNER */
 
         .detection-banner {
             position: relative;
-            overflow: hidden;
-            min-height: 260px;
-            border-radius: 25px;
-            padding: 38px 42px;
-            color: white;
-            background:
-                radial-gradient(circle at 85% 20%,
-                rgba(255,255,255,.15),
-                transparent 28%),
-                linear-gradient(120deg, #145d35, #20864b 55%, #2e9e5b);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 18px 40px rgba(26, 116, 62, .18);
+            gap: 25px;
+            min-height: 255px;
+            overflow: hidden;
+            padding: 36px 40px;
+            border: 1px solid #385d36;
+            border-radius: 25px;
+            color: white;
+            background:
+                radial-gradient(circle at 85% 30%,
+                    rgba(163, 255, 107, .17), transparent 27%),
+                linear-gradient(120deg, #14291a, #1b3c24 58%, #18311e);
+            box-shadow: 0 18px 55px rgba(0, 0, 0, .18);
         }
 
+        .detection-banner::before,
         .detection-banner::after {
             content: "";
             position: absolute;
-            width: 280px;
-            height: 280px;
-            border: 1px solid rgba(255,255,255,.1);
+            width: 270px;
+            height: 270px;
+            border: 1px solid rgba(163, 255, 107, .1);
             border-radius: 50%;
-            right: 90px;
-            top: -120px;
+            pointer-events: none;
+        }
+
+        .detection-banner::before {
+            top: -160px;
+            right: 100px;
+        }
+
+        .detection-banner::after {
+            right: -120px;
+            bottom: -190px;
+            width: 340px;
+            height: 340px;
         }
 
         .detection-content {
-            max-width: 600px;
             position: relative;
             z-index: 2;
+            max-width: 600px;
         }
 
         .detection-badge {
             display: inline-flex;
             padding: 7px 12px;
-            border-radius: 20px;
-            background: rgba(255,255,255,.13);
-            border: 1px solid rgba(255,255,255,.18);
+            border: 1px solid rgba(163, 255, 107, .25);
+            border-radius: 30px;
+            background: rgba(163, 255, 107, .08);
+            color: var(--green);
             font-size: 10px;
             font-weight: 800;
             letter-spacing: .8px;
         }
 
         .detection-content h2 {
-            font-size: 31px;
-            margin: 16px 0 9px;
+            margin: 17px 0 10px;
+            font-size: clamp(25px, 2.8vw, 34px);
+            line-height: 1.2;
             letter-spacing: -.8px;
         }
 
         .detection-content p {
-            color: rgba(255,255,255,.82);
-            max-width: 550px;
-            line-height: 1.6;
-            font-size: 14px;
-            margin-bottom: 24px;
+            max-width: 540px;
+            margin: 0 0 23px;
+            color: #bdcdbf;
+            font-size: 13px;
+            line-height: 1.8;
         }
 
         .detection-button {
             display: inline-flex;
             align-items: center;
-            gap: 15px;
-            padding: 13px 20px;
-            background: white;
-            color: #168047;
+            gap: 16px;
+            padding: 13px 18px;
+            border: 1px solid var(--green);
             border-radius: 12px;
+            background: var(--green);
+            color: #11200f;
             text-decoration: none;
-            font-weight: 800;
-            font-size: 13px;
+            font-size: 12px;
+            font-weight: 900;
             transition: .2s ease;
         }
 
         .detection-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 22px rgba(0,0,0,.14);
+            background: #bdff96;
+            box-shadow: 0 8px 25px rgba(163, 255, 107, .17);
         }
 
         .detection-visual {
             position: relative;
-            width: 230px;
-            height: 190px;
+            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2;
+            width: 215px;
+            height: 190px;
+            flex-shrink: 0;
         }
 
         .plant-circle {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.13);
-            border: 1px solid rgba(255,255,255,.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 75px;
+            width: 148px;
+            height: 148px;
+            border: 1px solid rgba(163, 255, 107, .24);
+            border-radius: 50%;
+            background: rgba(163, 255, 107, .08);
+            box-shadow: 0 0 60px rgba(163, 255, 107, .07);
+            font-size: 72px;
         }
 
         .accuracy-card {
             position: absolute;
-            bottom: 4px;
-            right: -2px;
-            padding: 12px 16px;
+            right: -5px;
+            bottom: 0;
+            padding: 12px 15px;
+            border: 1px solid #314b35;
             border-radius: 14px;
-            background: white;
-            color: #173a26;
-            box-shadow: 0 10px 25px rgba(0,0,0,.15);
+            background: #111c14;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .2);
         }
 
         .accuracy-card strong {
             display: block;
-            color: #168447;
-            font-size: 20px;
+            color: var(--green);
+            font-size: 19px;
         }
 
         .accuracy-card span {
-            font-size: 10px;
-            color: #7b877f;
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 9px;
         }
+
+        /* STAT CARDS */
 
         .dashboard-stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 15px;
             margin: 22px 0;
         }
 
         .stat-card {
-            background: white;
-            border: 1px solid #e6ece8;
-            border-radius: 18px;
-            padding: 20px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 13px;
+            min-width: 0;
+            padding: 19px 17px;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            background: linear-gradient(145deg, #121b15, #0e1511);
             transition: .2s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(30,70,45,.07);
+            border-color: #405b3e;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .17);
         }
 
         .stat-icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            border-radius: 13px;
+            font-size: 19px;
         }
 
         .stat-icon.green {
-            background: #e8f7ed;
+            background: #203b25;
+            color: var(--green);
         }
 
         .stat-icon.yellow {
-            background: #fff7dc;
+            background: #3b3219;
+            color: #ffd76b;
         }
 
         .stat-icon.blue {
-            background: #e8f2ff;
+            background: #1c3040;
+            color: #79c6ff;
         }
 
         .stat-icon.purple {
-            background: #f1eaff;
+            background: #302342;
+            color: #d1a3ff;
+        }
+
+        .stat-card > div:last-child {
+            min-width: 0;
         }
 
         .stat-card span {
             display: block;
-            color: #849088;
-            font-size: 11px;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
         }
 
         .stat-card strong {
             display: block;
-            font-size: 23px;
+            color: var(--text);
+            font-size: 24px;
+            line-height: 1.2;
         }
 
         .stat-card small {
-            color: #2a9c59;
-            font-size: 10px;
+            display: block;
+            margin-top: 6px;
+            color: var(--green-2);
+            font-size: 9px;
         }
 
-        .dashboard-grid {
+        /* CHARTS */
+
+        .dashboard-chart-grid {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 20px;
         }
 
         .dashboard-card {
-            background: white;
-            border: 1px solid #e6ece8;
-            border-radius: 20px;
-            padding: 24px;
+            min-width: 0;
+            padding: 23px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: linear-gradient(145deg, #121a15, #0e1511);
         }
 
         .card-heading {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 18px;
+            gap: 12px;
+            margin-bottom: 19px;
         }
 
         .card-eyebrow {
-            color: #2a9b58;
+            color: var(--green-2);
             font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 1.3px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
         }
 
         .card-heading h3 {
-            margin: 5px 0 0;
-            font-size: 19px;
+            margin: 7px 0 0;
+            color: var(--text);
+            font-size: 17px;
+            line-height: 1.4;
         }
 
-        .card-heading a {
-            color: #238b4f;
-            text-decoration: none;
+        .card-heading p {
+            margin: 6px 0 0;
+            color: var(--muted);
             font-size: 11px;
-            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+
+        /* RECENT PREDICTIONS */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            align-items: start;
+            gap: 18px;
+        }
+
+        .recent-predictions-list {
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: linear-gradient(145deg, #121a15, #0e1511);
+        }
+
+        .recent-predictions-list::before {
+            content: "RECENT ACTIVITY";
+            display: block;
+            margin-bottom: 12px;
+            color: var(--green-2);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
         }
 
         .prediction-item {
             display: grid;
-            grid-template-columns: 48px 1fr auto auto;
-            gap: 13px;
+            grid-template-columns: 45px minmax(0, 1fr) auto;
             align-items: center;
+            gap: 12px;
             padding: 14px 0;
-            border-bottom: 1px solid #edf1ee;
+            border-bottom: 1px solid #223027;
         }
 
         .prediction-item:last-child {
@@ -472,78 +634,125 @@
         }
 
         .plant-thumbnail {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: #f0f7f2;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 23px;
+            width: 45px;
+            height: 45px;
+            border: 1px solid #2b4430;
+            border-radius: 13px;
+            background: #19281c;
+            font-size: 21px;
+        }
+
+        .prediction-info {
+            min-width: 0;
         }
 
         .prediction-info strong {
             display: block;
-            font-size: 13px;
+            overflow-wrap: anywhere;
+            color: var(--text);
+            font-size: 12px;
         }
 
         .prediction-info span {
             display: block;
-            color: #87928c;
-            font-size: 11px;
-            margin-top: 3px;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
         }
 
         .prediction-status {
+            justify-self: end;
             padding: 6px 9px;
-            border-radius: 20px;
+            border-radius: 30px;
             font-size: 9px;
             font-weight: 800;
+            text-align: center;
         }
 
         .prediction-status.warning {
-            color: #a96800;
-            background: #fff4d8;
+            border: 1px solid #5b4520;
+            background: #302718;
+            color: #ffd27a;
         }
 
         .prediction-status.healthy {
-            color: #188349;
-            background: #e7f7ed;
+            border: 1px solid #315438;
+            background: #1b3020;
+            color: var(--green);
         }
 
-        .prediction-item > small {
-            color: #9aa49e;
+        .prediction-time {
+            grid-column: 2 / -1;
+            color: #778a7b;
             font-size: 10px;
+        }
+
+        .empty-predictions {
+            padding: 30px 15px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            margin-bottom: 10px;
+            font-size: 34px;
+        }
+
+        .empty-predictions h3 {
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .empty-predictions p {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        /* QUICK ACTIONS */
+
+        .quick-card .card-heading {
+            margin-bottom: 15px;
         }
 
         .quick-action {
             display: flex;
             align-items: center;
-            gap: 13px;
-            padding: 14px;
-            border: 1px solid #edf1ee;
-            border-radius: 14px;
-            text-decoration: none;
-            color: #1b2b21;
+            gap: 12px;
             margin-bottom: 10px;
+            padding: 13px;
+            border: 1px solid #29382d;
+            border-radius: 14px;
+            background: #111a14;
+            color: var(--text);
+            text-decoration: none;
             transition: .2s ease;
         }
 
         .quick-action:hover {
-            border-color: #bde2c9;
-            background: #f7fcf8;
             transform: translateX(3px);
+            border-color: #4c7047;
+            background: #17251a;
         }
 
         .quick-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: #eaf7ee;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 41px;
+            height: 41px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #213a25;
+            color: var(--green);
             font-size: 18px;
+        }
+
+        .quick-action > div:nth-child(2) {
+            min-width: 0;
         }
 
         .quick-action strong {
@@ -553,242 +762,132 @@
 
         .quick-action span {
             display: block;
-            color: #8a958f;
+            margin-top: 4px;
+            color: var(--muted);
             font-size: 10px;
-            margin-top: 3px;
+            line-height: 1.5;
         }
 
         .quick-action b {
             margin-left: auto;
-            color: #55a271;
+            color: var(--green);
         }
 
-        .result-section {
-            margin-top: 20px;
+        /* LATEST RESULT */
+
+        .latest-result-card {
+            grid-column: 1 / -1;
         }
 
-        .result-card {
-            background: white;
-            border: 1px solid #dce9e0;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 14px 35px rgba(30,80,45,.08);
-        }
-
-        .result-header {
-            padding: 20px 24px;
-            background: linear-gradient(135deg, #edf9f1, #f8fcf9);
-            border-bottom: 1px solid #e2eee6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .result-header-label {
-            color: #19874a;
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 1px;
-        }
-
-        .result-header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .speak-btn {
-            border: none;
-            background: #e1f5e8;
-            color: #157a41;
-            border-radius: 20px;
-            width: 38px;
-            height: 38px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .speak-btn:hover {
-            background: #cdeddb;
-        }
-
-        .confidence-pill {
-            padding: 8px 12px;
-            border-radius: 20px;
-            background: #e1f5e8;
-            color: #157a41;
+        .latest-result-card > p {
+            margin: 12px 0;
+            color: #b6c6b9;
             font-size: 12px;
-            font-weight: 800;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
         }
 
-        .result-main {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            gap: 28px;
-            padding: 26px;
+        .latest-result-card > p strong {
+            color: var(--text);
         }
 
-        .result-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 18px;
-            background: #f1f5f2;
+        .severity-note {
+            padding: 10px 12px;
+            border-left: 3px solid #e8bc57;
+            border-radius: 0 8px 8px 0;
+            background: #282519;
+            color: #d8c994 !important;
+            font-size: 10px !important;
         }
 
-        .result-content h2 {
-            margin: 5px 0;
-            font-size: 27px;
-            color: #173b26;
+        .latest-result-card .quick-action {
+            margin-top: 17px;
         }
 
-        .result-content .plant-label {
-            color: #289658;
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .7px;
-        }
-
-        .confidence-bar {
-            height: 8px;
-            border-radius: 10px;
-            background: #e7eee9;
-            margin: 15px 0 20px;
-            overflow: hidden;
-        }
-
-        .confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #25a35a, #74ca91);
-            border-radius: inherit;
-        }
-
-        .result-description {
-            color: #6f7e75;
-            font-size: 13px;
-            line-height: 1.7;
-        }
-
-        .remedy-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border-top: 1px solid #e7eee9;
-        }
-
-        .remedy-box {
-            padding: 24px;
-        }
-
-        .remedy-box + .remedy-box {
-            border-left: 1px solid #e7eee9;
-        }
-
-        .remedy-box h3 {
-            margin: 0 0 10px;
-            font-size: 15px;
-        }
-
-        .remedy-box p {
-            margin: 0;
-            color: #718078;
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        .remedy-title {
-            color: #1b8b4c;
-        }
-
-        .prevention-title {
-            color: #4d72a0;
-        }
-
-        .result-actions {
-            padding: 18px 24px;
-            border-top: 1px solid #e7eee9;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .result-action {
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 800;
-        }
-
-        .result-action.primary {
-            color: white;
-            background: #19874a;
-        }
-
-        .result-action.secondary {
-            color: #34734e;
-            background: #edf7f0;
-        }
+        /* PLANT TIP */
 
         .dashboard-tip {
-            margin-top: 20px;
-            background: linear-gradient(135deg, #fffdf1, #fffaf0);
-            border: 1px solid #f0e6bb;
-            border-radius: 17px;
-            padding: 17px 20px;
             display: flex;
-            gap: 13px;
             align-items: center;
+            gap: 13px;
+            margin-top: 20px;
+            padding: 17px 20px;
+            border: 1px solid #514625;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #211f15, #171a12);
         }
 
         .tip-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: #fff1c9;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #37301a;
+            font-size: 19px;
         }
 
         .dashboard-tip strong {
+            color: #f4e4a4;
             font-size: 12px;
         }
 
         .dashboard-tip p {
-            margin: 4px 0 0;
-            color: #7e7b6b;
+            margin: 5px 0 0;
+            color: #a8a58b;
             font-size: 11px;
+            line-height: 1.6;
         }
 
-        @media (max-width: 1100px) {
+        /* RESPONSIVE */
+
+        @media (max-width: 1250px) {
+            .dashboard-main {
+                padding: 27px 24px 40px;
+            }
 
             .dashboard-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .detection-banner {
+                padding: 30px;
             }
 
             .dashboard-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
-
         }
 
-        @media (max-width: 800px) {
-
+        @media (max-width: 900px) {
             .dashboard-sidebar {
                 position: relative;
                 width: 100%;
                 height: auto;
+                padding: 16px;
                 border-right: 0;
-                border-bottom: 1px solid #e6ece8;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .dashboard-logo {
+                padding: 0 8px 15px;
+            }
+
+            .sidebar-label {
+                padding-top: 12px;
             }
 
             .sidebar-nav {
                 flex-direction: row;
                 overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .sidebar-nav a {
+                flex: 0 0 auto;
+                white-space: nowrap;
             }
 
             .sidebar-bottom {
@@ -797,997 +896,744 @@
 
             .dashboard-main {
                 margin-left: 0;
-                padding: 22px 16px 40px;
+                padding: 24px 20px 40px;
+            }
+
+            .dashboard-chart-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+        
+/* Force PlantCare dashboard dark theme */
+body.dashboard-page {
+    background: #080d0a !important;
+    color: #edf7ef !important;
+}
+
+.dashboard-page .dashboard-sidebar,
+.dashboard-page .dashboard-card,
+.dashboard-page .recent-predictions-list,
+.dashboard-page .stat-card {
+    background: #101813 !important;
+    color: #edf7ef !important;
+    border-color: #243329 !important;
+}
+
+.dashboard-page .dashboard-main {
+    background: transparent !important;
+}
+
+.dashboard-page .dashboard-header h1,
+.dashboard-page .card-heading h3,
+.dashboard-page .prediction-info strong,
+.dashboard-page .stat-card strong,
+.dashboard-page .user-info strong,
+.dashboard-page .latest-result-card p strong {
+    color: #edf7ef !important;
+}
+
+.dashboard-page .dashboard-header p,
+.dashboard-page .card-heading p,
+.dashboard-page .prediction-info span,
+.dashboard-page .stat-card span,
+.dashboard-page .user-info small {
+    color: #91a397 !important;
+}
+
+.dashboard-page .sidebar-nav a {
+    color: #a1b0a4 !important;
+}
+
+.dashboard-page .sidebar-nav a.active,
+.dashboard-page .sidebar-nav a:hover {
+    background: #1b3020 !important;
+    color: #a3ff6b !important;
+}
+
+.dashboard-page .quick-action {
+    background: #111a14 !important;
+    color: #edf7ef !important;
+    border-color: #29382d !important;
+}
+
+.dashboard-page .chart-container {
+    color: #a9b9ac;
+}
+
+.dashboard-page .dashboard-tip {
+    background: #211f15 !important;
+    border-color: #514625 !important;
+}
+
+
+        @media (max-width: 600px) {
+            .dashboard-main {
+                padding: 20px 13px 30px;
             }
 
             .dashboard-header {
                 align-items: flex-start;
                 flex-direction: column;
+                gap: 15px;
+            }
+
+            .dashboard-user {
+                width: 100%;
+            }
+
+            .user-info strong {
+                max-width: 210px;
             }
 
             .detection-banner {
-                padding: 28px;
+                min-height: 0;
+                padding: 25px 20px;
+                border-radius: 19px;
             }
 
             .detection-visual {
                 display: none;
             }
 
-            .result-main {
-                grid-template-columns: 1fr;
+            .detection-content h2 {
+                font-size: 26px;
             }
 
-        }
-
-        @media (max-width: 600px) {
-
             .dashboard-stats {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .dashboard-card,
+            .recent-predictions-list {
+                padding: 17px;
             }
 
             .prediction-item {
-                grid-template-columns: 45px 1fr;
+                grid-template-columns: 42px minmax(0, 1fr);
+                gap: 10px;
             }
 
-            .prediction-status,
-            .prediction-item > small {
+            .plant-thumbnail {
+                width: 42px;
+                height: 42px;
+            }
+
+            .prediction-status {
+                grid-column: 2;
+                justify-self: start;
+            }
+
+            .prediction-time {
                 grid-column: 2;
             }
 
-            .remedy-grid {
-                grid-template-columns: 1fr;
+            .chart-container {
+                height: 220px;
             }
 
-            .remedy-box + .remedy-box {
-                border-left: 0;
-                border-top: 1px solid #e7eee9;
+            .dashboard-tip {
+                align-items: flex-start;
+                padding: 14px;
             }
-
-            .detection-content h2 {
-                font-size: 25px;
-            }
-
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+            }
+        }
     </style>
-
 </head>
 
 <body class="dashboard-page">
 
 <aside class="dashboard-sidebar">
 
-    <a href="/" class="dashboard-logo">
-
+    <a href="{{ url_for('home') }}" class="dashboard-logo">
         <span>🌿</span>
-
         <div>
             PlantCare
             <small>AI</small>
         </div>
-
     </a>
 
-
-    <div class="sidebar-label">
-        MAIN MENU
-    </div>
-
+    <div class="sidebar-label">{{ lang.main_menu }}</div>
 
     <nav class="sidebar-nav">
-
-        <a href="{{ url_for('dashboard') }}"
-           class="active">
-
+        <a href="{{ url_for('dashboard') }}" class="active">
             <span>⌂</span>
-
             {{ lang.dashboard }}
-
         </a>
-
 
         <a href="{{ url_for('detect') }}">
-
             <span>🔍</span>
-
             {{ lang.new_detection }}
-
         </a>
-
 
         <a href="{{ url_for('history') }}">
-
             <span>🕘</span>
-
             {{ lang.prediction_history }}
-
         </a>
-
 
         <a href="{{ url_for('plant_library') }}">
-
             <span>🌱</span>
-
             {{ lang.plant_library }}
-
         </a>
-
     </nav>
 
-
     <div class="language-switcher">
-
         <a href="{{ url_for('set_language', language='en') }}"
            class="language-btn">
-
             🇬🇧 {{ lang.english }}
-
         </a>
-
 
         <a href="{{ url_for('set_language', language='ta') }}"
            class="language-btn">
-
             🇮🇳 {{ lang.tamil }}
-
         </a>
-
     </div>
-
 
     <div class="sidebar-label">
-
+    {% if current_language == 'ta' %}
+        கணக்கு
+    {% else %}
         ACCOUNT
-
-    </div>
-
+    {% endif %}
+</div>
 
     <nav class="sidebar-nav">
-
-        <a href="#">
-
-            <span>⚙</span>
-
-            {{ lang.settings }}
-
+        <a href="{{ url_for('profile') }}">
+            <span>👤</span>
+            {% if current_language == 'ta' %}
+                சுயவிவரம்
+            {% else %}
+                My Profile
+            {% endif %}
         </a>
-
 
         <a href="{{ url_for('logout') }}">
-
             <span>↪</span>
-
             {{ lang.logout }}
-
         </a>
-
     </nav>
 
-
     <div class="sidebar-bottom">
-
-        <div class="sidebar-help-icon">
-            ?
-        </div>
-
-
+        <div class="sidebar-help-icon">?</div>
         <div>
-
-            <strong>
-                {{ lang.need_help }}
-            </strong>
-
-            <small>
-                {{ lang.explore_plantcare }}
-            </small>
-
+            <strong>{{ lang.need_help }}</strong>
+            <small>{{ lang.explore_plantcare }}</small>
         </div>
-
     </div>
 
 </aside>
 
-
 <main class="dashboard-main">
-
 
     <header class="dashboard-header">
 
         <div>
-
             <span class="dashboard-breadcrumb">
-
                 {{ lang.overview }}
-
             </span>
 
-
             <h1>
-
                 {{ lang.welcome }},
-
                 {{ session.get('full_name', 'Plant Lover') }}! 🌱
-
             </h1>
 
-
-            <p>
-
-                {{ lang.dashboard_description }}
-
-            </p>
-
+            <p>{{ lang.dashboard_description }}</p>
         </div>
-
 
         <div class="dashboard-user">
 
-            <div class="notification">
-
+            <a href="{{ url_for('notifications') }}"
+               class="notification"
+               aria-label="Notifications">
                 🔔
 
-            </div>
-
+                {% if unread_notifications|default(0)|int > 0 %}
+                    <span class="notification-badge">
+                        {{ unread_notifications }}
+                    </span>
+                {% endif %}
+            </a>
 
             <div class="user-avatar">
-
                 {{ session.get('full_name', 'U')[0]|upper }}
-
             </div>
 
-
             <div class="user-info">
-
                 <strong>
-
                     {{ session.get('full_name', 'User') }}
-
                 </strong>
 
-
-                <small>
-
-                    {{ lang.plant_care_member }}
-
-                </small>
-
+                <small>{{ lang.plant_care_member }}</small>
             </div>
 
         </div>
 
     </header>
 
-
-
     <section class="detection-banner">
-
 
         <div class="detection-content">
 
-
             <span class="detection-badge">
-
                 ✨ {{ lang.ai_powered }}
-
             </span>
 
+            <h2>{{ lang.plant_feeling_unwell }}</h2>
 
-            <h2>
-
-                {{ lang.plant_feeling_unwell }}
-
-            </h2>
-
-
-            <p>
-
-                {{ lang.upload_clear_image }}
-
-            </p>
-
+            <p>{{ lang.upload_clear_image }}</p>
 
             <a href="{{ url_for('detect') }}"
                class="detection-button">
-
                 {{ lang.start_new_detection }}
-
-                <span>
-                    →
-                </span>
-
+                <span>→</span>
             </a>
 
         </div>
 
-
         <div class="detection-visual">
-
-            <div class="plant-circle">
-
-                🌿
-
-            </div>
-
+            <div class="plant-circle">🌿</div>
 
             <div class="accuracy-card">
-
-                <strong>
-                    94.6%
-                </strong>
-
-                <span>
-                    {{ lang.model_accuracy }}
-                </span>
-
+                <strong>94.6%</strong>
+                <span>{{ lang.model_accuracy }}</span>
             </div>
-
         </div>
 
     </section>
-
-
 
     <section class="dashboard-stats">
 
-
         <div class="stat-card">
-
-            <div class="stat-icon green">
-
-                🔬
-
-            </div>
-
-
+            <div class="stat-icon green">🔬</div>
             <div>
-
-                <span>
-                    {{ lang.total_predictions }}
-                </span>
-
-                <strong>
-                    {{ total_predictions }}
-                </strong>
-
-                <small>
-                    {{ lang.ai_analyses }}
-                </small>
-
+                <span>{{ lang.total_predictions }}</span>
+                <strong>{{ total_predictions|default(0) }}</strong>
+                <small>{{ lang.ai_analyses }}</small>
             </div>
-
         </div>
 
-
-
         <div class="stat-card">
-
-            <div class="stat-icon yellow">
-
-                🌿
-
-            </div>
-
-
+            <div class="stat-icon yellow">🌿</div>
             <div>
-
-                <span>
-                    {{ lang.plants_analyzed }}
-                </span>
-
-                <strong>
-                    {{ plants_analyzed|default(0) }}
-                </strong>
-
-                <small>
-                    {{ lang.plant_varieties }}
-                </small>
-
+                <span>{{ lang.plants_analyzed }}</span>
+                <strong>{{ plants_analyzed|default(0) }}</strong>
+                <small>{{ lang.plant_varieties }}</small>
             </div>
-
         </div>
 
-
-
         <div class="stat-card">
-
-            <div class="stat-icon blue">
-
-                ✓
-
-            </div>
-
-
+            <div class="stat-icon blue">✓</div>
             <div>
-
-                <span>
-                    {{ lang.healthy_plants }}
-                </span>
-
-                <strong>
-                    {{ healthy_plants|default(0) }}
-                </strong>
-
-                <small>
-                    {{ lang.healthy_results }}
-                </small>
-
+                <span>{{ lang.healthy_plants }}</span>
+                <strong>{{ healthy_plants|default(0) }}</strong>
+                <small>{{ lang.healthy_results }}</small>
             </div>
-
         </div>
 
-
-
         <div class="stat-card">
-
-            <div class="stat-icon purple">
-
-                💡
-
-            </div>
-
-
+            <div class="stat-icon purple">💡</div>
             <div>
-
-                <span>
-                    {{ lang.remedies_viewed }}
-                </span>
-
-                <strong>
-                    {{ remedies_viewed|default(0) }}
-                </strong>
-
-                <small>
-                    {{ lang.helpful_guidance }}
-                </small>
-
+                <span>{{ lang.remedies_viewed }}</span>
+                <strong>{{ remedies_viewed|default(0) }}</strong>
+                <small>{{ lang.helpful_guidance }}</small>
             </div>
-
         </div>
 
     </section>
 
-
-
     <div class="dashboard-chart-grid">
 
-
         <div class="dashboard-card chart-card">
-
             <div class="card-heading">
-
                 <div>
-
                     <span class="card-eyebrow">
-
                         {{ lang.disease_analytics }}
-
                     </span>
 
-
-                    <h3>
-
-                        {{ lang.disease_distribution }}
-
-                    </h3>
-
-
-                    <p>
-
-                        {{ lang.detected_plant_diseases }}
-
-                    </p>
-
+                    <h3>{{ lang.disease_distribution }}</h3>
+                    <p>{{ lang.detected_plant_diseases }}</p>
                 </div>
-
             </div>
-
 
             <div class="chart-container">
-
                 <canvas id="diseaseChart"></canvas>
-
             </div>
-
         </div>
 
-
-
         <div class="dashboard-card chart-card">
-
             <div class="card-heading">
-
                 <div>
-
-                    <span class="card-eyebrow">
-
-                        {{ lang.activity }}
-
-                    </span>
-
-
-                    <h3>
-
-                        {{ lang.prediction_activity }}
-
-                    </h3>
-
-
-                    <p>
-
-                        {{ lang.your_last_7_days }}
-
-                    </p>
-
+                    <span class="card-eyebrow">{{ lang.activity }}</span>
+                    <h3>{{ lang.prediction_activity }}</h3>
+                    <p>{{ lang.your_last_7_days }}</p>
                 </div>
-
             </div>
-
 
             <div class="chart-container">
-
                 <canvas id="activityChart"></canvas>
-
             </div>
-
         </div>
 
     </div>
 
-
-
     <section class="dashboard-grid">
-
 
         <div class="recent-predictions-list">
 
-
             {% if recent_predictions %}
-
 
                 {% for item in recent_predictions %}
 
-
                     <div class="prediction-item">
 
-
-                        <div class="plant-thumbnail">
-
-                            🌿
-
-                        </div>
-
-
+                        <div class="plant-thumbnail">🌿</div>
 
                         <div class="prediction-info">
-
                             <strong>
-
                                 {{ item.plant_name|default(lang.plant) }}
-
                             </strong>
 
-
                             <span>
-
                                 {{ item.disease_name|default(lang.analysis_completed) }}
-
                             </span>
-
                         </div>
-
-
 
                         {% if 'healthy' in item.disease_name|default('')|lower %}
 
-
                             <div class="prediction-status healthy">
-
                                 {{ lang.healthy }}
-
                             </div>
-
 
                         {% else %}
 
-
                             <div class="prediction-status warning">
-
                                 {{ lang.needs_attention }}
-
                             </div>
-
 
                         {% endif %}
 
-
-
                         <small class="prediction-time">
-
                             {% if item.prediction_date %}
-
                                 {{ item.prediction_date.strftime('%d %b, %I:%M %p') }}
-
                             {% else %}
-
                                 {{ lang.recent }}
-
                             {% endif %}
-
                         </small>
 
-
                     </div>
-
 
                 {% endfor %}
 
-
             {% else %}
 
-
                 <div class="empty-predictions">
-
-                    <div class="empty-icon">
-
-                        🌱
-
-                    </div>
-
-
-                    <h3>
-
-                        {{ lang.no_predictions }}
-
-                    </h3>
-
-
-                    <p>
-
-                        {{ lang.start_first_detection }}
-
-                    </p>
-
+                    <div class="empty-icon">🌱</div>
+                    <h3>{{ lang.no_predictions }}</h3>
+                    <p>{{ lang.start_first_detection }}</p>
                 </div>
-
 
             {% endif %}
 
-
         </div>
-
-
 
         <div class="dashboard-card quick-card">
 
-
             <div class="card-heading">
-
                 <div>
-
                     <span class="card-eyebrow">
-
                         {{ lang.quick_access }}
-
                     </span>
 
-
-                    <h3>
-
-                        {{ lang.explore_plantcare }}
-
-                    </h3>
-
+                    <h3>{{ lang.explore_plantcare }}</h3>
                 </div>
+            </div>
+
+            <a href="{{ url_for('detect') }}" class="quick-action">
+                <div class="quick-icon">🔬</div>
+                <div>
+                    <strong>{{ lang.new_detection }}</strong>
+                    <span>{{ lang.analyze_plant_image }}</span>
+                </div>
+                <b>→</b>
+            </a>
+
+            <a href="{{ url_for('history') }}" class="quick-action">
+                <div class="quick-icon">🕘</div>
+                <div>
+                    <strong>{{ lang.prediction_history }}</strong>
+                    <span>{{ lang.total_predictions }}: {{ total_predictions|default(0) }}</span>
+                </div>
+                <b>→</b>
+            </a>
+
+            <a href="{{ url_for('plant_library') }}" class="quick-action">
+                <div class="quick-icon">🌱</div>
+                <div>
+                    <strong>{{ lang.plant_library }}</strong>
+                    <span>{{ lang.explore_plantcare }}</span>
+                </div>
+                <b>→</b>
+            </a>
+
+        </div>
+
+        {% if latest_prediction %}
+
+            <div class="dashboard-card latest-result-card">
+
+                <div class="card-heading">
+                    <div>
+                        <span class="card-eyebrow">
+    {% if current_language == 'ta' %}
+        சமீபத்திய முடிவு
+    {% else %}
+        LATEST RESULT
+    {% endif %}
+</span>
+
+<h3>
+    {% if current_language == 'ta' %}
+        🌿 சமீபத்திய தாவர கணிப்பு
+    {% else %}
+        🌿 Latest Plant Prediction
+    {% endif %}
+</h3>
+                    </div>
+                </div>
+
+                <p>
+                    <strong>Plant:</strong>
+                    {{ latest_prediction.plant_name|default('Unavailable') }}
+                </p>
+
+                <p>
+                    <strong>Detected Disease:</strong>
+                    {{ latest_prediction.disease_name|default('Unavailable') }}
+                </p>
+
+                <p>
+                    <strong>Confidence:</strong>
+                    {{ latest_prediction.confidence|default('Unavailable') }}{% if latest_prediction.confidence is not none %}%{% endif %}
+                </p>
+
+                {% if 'healthy' not in latest_prediction.disease_name|default('')|lower %}
+
+                    <p>
+                        <strong>Estimated Severity:</strong>
+                        {{ latest_prediction.severity|default('Unavailable', true) }}
+                    </p>
+
+                    <p>
+                        <strong>Recommended Remedy:</strong>
+                        {{ latest_prediction.remedy|default('No remedy information available.', true) }}
+                    </p>
+
+                    <p>
+                        <strong>Prevention:</strong>
+                        {{ latest_prediction.prevention|default('No prevention information available.', true) }}
+                    </p>
+
+                    <p>
+                        <strong>Chemical Treatment:</strong>
+                        {{ latest_prediction.chemical_remedy|default('No chemical treatment information available.', true) }}
+                    </p>
+
+                    <p class="severity-note">
+                        Severity is an experimental colour-based estimate,
+                        not a validated diagnosis.
+                    </p>
+
+                {% else %}
+
+                    <p>
+                        🌱 The classifier identified this plant as healthy.
+                        Disease severity is not applicable.
+                    </p>
+
+                {% endif %}
+
+                <a href="{{ url_for('detect') }}" class="quick-action">
+                    <div class="quick-icon">🔬</div>
+                    <div>
+                        <strong>Analyze Another Plant</strong>
+                        <span>Start a new plant analysis</span>
+                    </div>
+                    <b>→</b>
+                </a>
 
             </div>
 
-
-
-            <a href="{{ url_for('detect') }}"
-               class="quick-action">
-
-
-                <div class="quick-icon">
-
-                    🔬
-
-                </div>
-
-
-                <div>
-
-                    <strong>
-
-                        {{ lang.new_detection }}
-
-                    </strong>
-
-
-                    <span>
-
-                        {{ lang.analyze_plant_image }}
-
-                    </span>
-
-                </div>
-
-
-                <b>
-
-                    →
-
-                </b>
-
-            </a>
-
-
-        </div>
+        {% endif %}
 
     </section>
-
-
-
-
-
 
     <section class="dashboard-tip">
-
-
-        <div class="tip-icon">
-
-            💡
-
-        </div>
-
-
+        <div class="tip-icon">💡</div>
         <div>
-
-            <strong>
-
-                {{ lang.plantcare_tip }}
-
-            </strong>
-
-
-            <p>
-
-                {{ lang.tip_description }}
-
-            </p>
-
+            <strong>{{ lang.plantcare_tip }}</strong>
+            <p>{{ lang.tip_description }}</p>
         </div>
-
-
     </section>
-
 
 </main>
 
-
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", function () {
 
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js did not load. Check your internet connection.");
+        return;
+    }
 
-    const diseaseCanvas =
-        document.getElementById("diseaseChart");
+    const chartText = "#a9b9ac";
+    const gridColor = "rgba(145, 163, 151, 0.12)";
+    const green = "#a3ff6b";
+    const greenDark = "#56d364";
 
+    const diseaseCanvas = document.getElementById("diseaseChart");
 
     if (diseaseCanvas) {
-
-
-        const diseaseLabels =
-            {{ disease_labels|default([])|tojson }};
-
-
-        const diseaseCounts =
-            {{ disease_counts|default([])|tojson }};
-
+        const diseaseLabels = {{ disease_labels|default([])|tojson }};
+        const diseaseCounts = {{ disease_counts|default([])|tojson }};
 
         new Chart(diseaseCanvas, {
-
-
             type: "doughnut",
-
-
             data: {
-
                 labels: diseaseLabels,
-
-
                 datasets: [{
-
                     data: diseaseCounts,
-
-                    borderWidth: 2
-
+                    backgroundColor: [
+                        "#a3ff6b",
+                        "#56d364",
+                        "#4eb5a5",
+                        "#6c8cff",
+                        "#c19bff",
+                        "#ffca72",
+                        "#ff8e8e",
+                        "#70c8f8"
+                    ],
+                    borderColor: "#101813",
+                    borderWidth: 4,
+                    hoverOffset: 7
                 }]
-
             },
-
-
             options: {
-
                 responsive: true,
-
                 maintainAspectRatio: false,
-
-                cutout: "65%",
-
-
+                cutout: "66%",
                 plugins: {
-
-
                     legend: {
-
-                        position: "bottom"
-
-                    },
-
-
+    position: "bottom",
+    labels: {
+        color: chartText,
+        padding: 12,
+        usePointStyle: true,
+        pointStyle: "circle",
+        boxWidth: 8,
+        boxHeight: 8,
+        font: {
+            size: 10,
+            family: "Inter, sans-serif"
+        }
+    }
+}
+                    ,
                     tooltip: {
-
                         callbacks: {
-
-
-                            label: function(context) {
-
-
-                                return " " +
-
-                                    context.label +
-
-                                    ": " +
-
-                                    context.raw +
-
-                                    " {{ lang.prediction_count }}";
-
+                            label: function (context) {
+                                return " " + context.label + ": " +
+                                    context.raw + " {{ lang.prediction_count }}";
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         });
-
     }
 
-
-
-    const activityCanvas =
-        document.getElementById("activityChart");
-
+    const activityCanvas = document.getElementById("activityChart");
 
     if (activityCanvas) {
-
-
-        const activityLabels =
-            {{ activity_labels|default([])|tojson }};
-
-
-        const activityCounts =
-            {{ activity_counts|default([])|tojson }};
-
+        const activityLabels = {{ activity_labels|default([])|tojson }};
+        const activityCounts = {{ activity_counts|default([])|tojson }};
 
         new Chart(activityCanvas, {
-
-
             type: "line",
-
-
             data: {
-
-
                 labels: activityLabels,
-
-
                 datasets: [{
-
-
                     label: "{{ lang.predictions }}",
-
-
                     data: activityCounts,
-
-
+                    borderColor: green,
+                    backgroundColor: "rgba(163, 255, 107, 0.10)",
                     borderWidth: 3,
-
                     tension: 0.35,
-
-                    fill: false,
-
-                    pointRadius: 5
-
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: green,
+                    pointBorderColor: "#101813",
+                    pointBorderWidth: 2
                 }]
-
             },
-
-
             options: {
-
-
                 responsive: true,
-
                 maintainAspectRatio: false,
-
-
-                scales: {
-
-
-                    y: {
-
-                        beginAtZero: true,
-
-
-                        ticks: {
-
-                            precision: 0
-
-                        }
-
-                    }
-
+                interaction: {
+                    intersect: false,
+                    mode: "index"
                 },
-
-
-                plugins: {
-
-
-                    legend: {
-
-                        display: false
-
+                scales: {
+                    x: {
+                        ticks: {
+                            color: chartText,
+                            maxRotation: 0,
+                            autoSkip: true
+                        },
+                        grid: { display: false },
+                        border: { display: false }
                     },
-
-
-                    tooltip: {
-
-
-                        callbacks: {
-
-
-                            label: function(context) {
-
-
-                                return " " +
-
-                                    "{{ lang.predictions }}" +
-
-                                    ": " +
-
-                                    context.raw;
-
-                            }
-
-                        }
-
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: chartText,
+                            precision: 0
+                        },
+                        grid: { color: gridColor },
+                        border: { display: false }
                     }
-
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return " {{ lang.predictions }}: " + context.raw;
+                            }
+                        }
+                    }
                 }
-
             }
-
         });
-
     }
 
-
 });
-
-
-
 </script>
 
-
 </body>
-
 </html>

@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+<html lang="{{ 'ta' if current_language == 'ta' else 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% if current_language == 'ta' %}
+            செய்தி அனுப்பு | PlantCare AI
+        {% else %}
+            Send Message | PlantCare AI
+        {% endif %}
+    </title>
+
+    <style>
+        :root {
+            --bg: #050b07;
+            --card: rgba(14, 29, 19, .95);
+            --border: rgba(111, 255, 151, .18);
+            --green: #9cff57;
+            --green-bright: #45ff91;
+            --text: #effff2;
+            --muted: #9bb6a2;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 36px 18px;
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(ellipse at 8% 0%, rgba(37, 110, 58, .23), transparent 36%),
+                radial-gradient(ellipse at 100% 90%, rgba(22, 94, 48, .16), transparent 35%),
+                var(--bg);
+        }
+
+        .page-shell {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: linear-gradient(145deg, #193c25, #0d1e13);
+            font-size: 22px;
+        }
+
+        .brand-name {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .brand-caption {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .admin-pill {
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(40, 95, 54, .16);
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(220px, .75fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .message-card,
+        .info-card {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 23px;
+            background: var(--card);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, .3);
+            backdrop-filter: blur(16px);
+        }
+
+        .message-header {
+            position: relative;
+            overflow: hidden;
+            padding: 31px 32px 27px;
+            border-bottom: 1px solid var(--border);
+            background:
+                radial-gradient(ellipse at 95% 5%, rgba(69, 255, 145, .13), transparent 36%),
+                linear-gradient(125deg, #142b1c, #0d1b12);
+        }
+
+        .message-header::after {
+            content: "✉";
+            position: absolute;
+            top: 15px;
+            right: 28px;
+            color: var(--green);
+            font-size: 78px;
+            font-weight: 800;
+            opacity: .12;
+            transform: rotate(-10deg);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 12px;
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: clamp(27px, 4vw, 35px);
+            letter-spacing: -.9px;
+            line-height: 1.4;
+        }
+
+        h1 span { color: var(--green); }
+
+        .message-header p {
+            position: relative;
+            z-index: 1;
+            max-width: 430px;
+            margin: 11px 0 0;
+            color: #abc3b0;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .form-body { padding: 28px 32px 32px; }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 23px;
+        }
+
+        .section-number {
+            display: grid;
+            place-items: center;
+            width: 35px;
+            height: 35px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(69, 255, 145, .07);
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .section-heading p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .field { margin-bottom: 21px; }
+
+        label {
+            display: block;
+            margin-bottom: 9px;
+            color: #dcefe0;
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 1.7;
+        }
+
+        .label-note {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 49px;
+            padding: 13px 14px;
+            border: 1px solid #294332;
+            border-radius: 12px;
+            outline: none;
+            background: #09150d;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+
+        input::placeholder,
+        textarea::placeholder { color: #718b78; }
+
+        input:hover,
+        select:hover,
+        textarea:hover { border-color: #3b6548; }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--green-bright);
+            background: #0b1a10;
+            box-shadow: 0 0 0 3px rgba(69, 255, 145, .09);
+        }
+
+        select { cursor: pointer; }
+
+        select option {
+            background: #0b1911;
+            color: var(--text);
+        }
+
+        textarea {
+            min-height: 165px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .field-hint {
+            margin: 8px 0 0;
+            color: #819b88;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 7px;
+            padding-top: 23px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-note {
+            display: block;
+            margin-bottom: 9px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        button,
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 12px 18px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.7;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, border-color .2s, background .2s;
+        }
+
+        button {
+            background: linear-gradient(135deg, #b0ff70, #52ef91);
+            color: #07130a;
+            box-shadow: 0 7px 22px rgba(69, 255, 145, .12);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(69, 255, 145, .22);
+        }
+
+        button:active { transform: translateY(0); }
+
+        .back-link {
+            border-color: #304b37;
+            background: #14241a;
+            color: #d2e9d7;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            border-color: #65936e;
+            background: #1a3021;
+            color: var(--green);
+        }
+
+        .info-card { padding: 24px; }
+
+        .info-icon {
+            display: grid;
+            place-items: center;
+            width: 48px;
+            height: 48px;
+            margin-bottom: 19px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: rgba(69, 255, 145, .08);
+            font-size: 23px;
+        }
+
+        .info-card h2 {
+            margin: 0 0 9px;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .info-card > p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .info-divider {
+            height: 1px;
+            margin: 22px 0;
+            background: var(--border);
+        }
+
+        .tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            margin-top: 17px;
+        }
+
+        .tip-icon {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: rgba(69, 255, 145, .08);
+            font-size: 14px;
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .tip span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .privacy-note {
+            margin-top: 22px;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(69, 255, 145, .035);
+            color: #b6cdbb;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 760px) {
+            body { padding: 22px 13px; }
+
+            .layout { grid-template-columns: minmax(0, 1fr); }
+
+            .info-card { order: 2; }
+        }
+
+        @media (max-width: 500px) {
+            .topbar { margin-bottom: 18px; }
+
+            .brand-name { font-size: 15px; }
+
+            .brand-caption { font-size: 11px; }
+
+            .admin-pill {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .message-card,
+            .info-card { border-radius: 18px; }
+
+            .message-header { padding: 26px 21px 24px; }
+
+            .message-header::after {
+                right: 12px;
+                font-size: 58px;
+            }
+
+            .form-body { padding: 24px 21px 25px; }
+
+            .form-footer { align-items: stretch; }
+
+            .form-footer .back-link,
+            .form-footer button { width: 100%; }
+
+            .form-footer > div:last-child {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .footer-note { margin-bottom: 0; }
+
+            .info-card { padding: 21px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-shell">
+
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon">🌿</div>
+                <div>
+                    <p class="brand-name">PlantCare AI</p>
+                    <p class="brand-caption">
+                        {% if current_language == 'ta' %}
+                            தாவர அறிவு மேலாண்மை
+                        {% else %}
+                            Plant knowledge management
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <span class="admin-pill">
+                ⚙
+                {% if current_language == 'ta' %}
+                    நிர்வாகப் பகுதி
+                {% else %}
+                    Admin Panel
+                {% endif %}
+            </span>
+        </header>
+
+        <div class="layout">
+
+            <section class="message-card">
+                <div class="message-header">
+
+                    <div class="eyebrow">
+                        ✦
+                        {% if current_language == 'ta' %}
+                            பயனர் தொடர்பு
+                        {% else %}
+                            User Communication
+                        {% endif %}
+                    </div>
+
+                    <h1>
+                        {% if current_language == 'ta' %}
+                            <span>செய்தி</span> அனுப்பு
+                        {% else %}
+                            Send <span>Message</span>
+                        {% endif %}
+                    </h1>
+
+                    <p>
+                        {% if current_language == 'ta' %}
+                            PlantCare AI பயனர்களுடன் முக்கிய அறிவிப்புகள், பயனுள்ள நினைவூட்டல்கள் மற்றும் தகவல்களைப் பகிரவும்.
+                        {% else %}
+                            Share important updates, helpful reminders, and notifications with your PlantCare AI users.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="form-body">
+
+                    <div class="section-heading">
+                        <div class="section-number">01</div>
+                        <div>
+                            <h2>
+                                {% if current_language == 'ta' %}
+                                    அறிவிப்பை உருவாக்கவும்
+                                {% else %}
+                                    Compose Notification
+                                {% endif %}
+                            </h2>
+
+                            <p>
+                                {% if current_language == 'ta' %}
+                                    உங்கள் செய்தியின் விவரங்களை உள்ளிடவும்.
+                                {% else %}
+                                    Fill in the details of your message.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('admin_send_message') }}" method="POST">
+
+                        <div class="field">
+                            <label for="user_id">
+                                {% if current_language == 'ta' %}
+                                    பயனரைத் தேர்ந்தெடுக்கவும்
+                                {% else %}
+                                    Select User
+                                {% endif %}
+                                <span style="color: var(--green);">*</span>
+                            </label>
+
+                            <select name="user_id" id="user_id" required>
+                                <option value="">
+                                    {% if current_language == 'ta' %}
+                                        பயனரைத் தேர்வு செய்யவும்
+                                    {% else %}
+                                        Choose a user
+                                    {% endif %}
+                                </option>
+
+                                {% for user in users %}
+                                <option value="{{ user[0] }}">
+                                    {{ user[1] }}{% if user|length > 2 and user[2] %} — {{ user[2] }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <p class="field-hint">
+                                {% if current_language == 'ta' %}
+                                    இந்த அறிவிப்பைப் பெற வேண்டிய பதிவு செய்த பயனரைத் தேர்ந்தெடுக்கவும்.
+                                {% else %}
+                                    Select the registered user who should receive this notification.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="field">
+                            <label for="title">
+                                {% if current_language == 'ta' %}
+                                    செய்தியின் தலைப்பு
+                                {% else %}
+                                    Message Title
+                                {% endif %}
+                                <span style="color: var(--green);">*</span>
+                            </label>
+
+                            <input type="text"
+                                   id="title"
+                                   name="title"
+                                   maxlength="200"
+                                   placeholder="{% if current_language == 'ta' %}தெளிவான, பயனுள்ள தலைப்பை உள்ளிடவும்{% else %}Enter a clear, helpful title{% endif %}"
+                                   required>
+                        </div>
+
+                        <div class="field">
+                            <label for="message">
+                                {% if current_language == 'ta' %}
+                                    செய்தி
+                                {% else %}
+                                    Message
+                                {% endif %}
+                                <span style="color: var(--green);">*</span>
+                            </label>
+
+                            <textarea id="message"
+                                      name="message"
+                                      placeholder="{% if current_language == 'ta' %}உங்கள் அறிவிப்பை இங்கே எழுதவும்...{% else %}Write your notification here...{% endif %}"
+                                      required></textarea>
+
+                            <p class="field-hint">
+                                {% if current_language == 'ta' %}
+                                    உங்கள் செய்தியைத் தெளிவாகவும், நட்பாகவும், எளிதில் புரியும் வகையிலும் எழுதவும்.
+                                {% else %}
+                                    Keep your message clear, friendly, and easy to understand.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="form-footer">
+
+                            <a class="back-link"
+                               href="{{ url_for('admin_dashboard') }}">
+                                ←
+                                {% if current_language == 'ta' %}
+                                    டாஷ்போர்டு
+                                {% else %}
+                                    Dashboard
+                                {% endif %}
+                            </a>
+
+                            <div>
+                                <span class="footer-note">
+                                    {% if current_language == 'ta' %}
+                                        அனுப்புவதற்கு முன் செய்தியைச் சரிபார்க்கவும்.
+                                    {% else %}
+                                        Review your message before sending.
+                                    {% endif %}
+                                </span>
+
+                                <button type="submit">
+                                    ✉
+                                    {% if current_language == 'ta' %}
+                                        செய்தியை அனுப்பு
+                                    {% else %}
+                                        Send Message
+                                    {% endif %}
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <aside class="info-card">
+                <div class="info-icon">📨</div>
+
+                <h2>
+                    {% if current_language == 'ta' %}
+                        உங்கள் பயனர்களுக்குத் தகவல் தெரிவிக்கவும்
+                    {% else %}
+                        Keep your users informed
+                    {% endif %}
+                </h2>
+
+                <p>
+                    {% if current_language == 'ta' %}
+                        பயனுள்ள அறிவிப்பு, பயனர்கள் புதுப்பிப்புகளை அறிந்துகொள்ளவும் தாவரப் பராமரிப்பு சமூகத்துடன் இணைந்திருக்கவும் உதவும்.
+                    {% else %}
+                        A thoughtful notification helps users stay updated and connected with your plant-care community.
+                    {% endif %}
+                </p>
+
+                <div class="info-divider"></div>
+
+                <div class="tip">
+                    <div class="tip-icon">✍️</div>
+                    <div>
+                        <strong>
+                            {% if current_language == 'ta' %}
+                                தெளிவான தலைப்பை எழுதவும்
+                            {% else %}
+                                Write a clear title
+                            {% endif %}
+                        </strong>
+
+                        <span>
+                            {% if current_language == 'ta' %}
+                                உங்கள் செய்தியின் நோக்கத்தை எளிதில் புரிந்துகொள்ளும் வகையில் எழுதவும்.
+                            {% else %}
+                                Make the purpose of your message easy to understand.
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <div class="tip-icon">🌱</div>
+                    <div>
+                        <strong>
+                            {% if current_language == 'ta' %}
+                                பயனுள்ள தகவலைப் பகிரவும்
+                            {% else %}
+                                Keep it helpful
+                            {% endif %}
+                        </strong>
+
+                        <span>
+                            {% if current_language == 'ta' %}
+                                தாவரப் பராமரிப்பு மற்றும் தளத்துடன் தொடர்புடைய பயனுள்ள தகவல்களைப் பகிரவும்.
+                            {% else %}
+                                Share useful updates related to plant care and the platform.
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <div class="tip-icon">👤</div>
+                    <div>
+                        <strong>
+                            {% if current_language == 'ta' %}
+                                பெறுநரைச் சரிபார்க்கவும்
+                            {% else %}
+                                Check the recipient
+                            {% endif %}
+                        </strong>
+
+                        <span>
+                            {% if current_language == 'ta' %}
+                                சரியான பதிவு செய்த பயனர் தேர்ந்தெடுக்கப்பட்டுள்ளாரா என்பதை உறுதிசெய்யவும்.
+                            {% else %}
+                                Make sure the correct registered user is selected.
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="privacy-note">
+                    💚 <strong>
+                        {% if current_language == 'ta' %}
+                            அனுப்புவதற்கு முன்:
+                        {% else %}
+                            Before sending:
+                        {% endif %}
+                    </strong>
+
+                    {% if current_language == 'ta' %}
+                        பெறுநர், தலைப்பு மற்றும் செய்தியின் உள்ளடக்கத்தை மீண்டும் சரிபார்க்கவும்.
+                    {% else %}
+                        Double-check the recipient, title, and message content.
+                    {% endif %}
+                </div>
+            </aside>
+
+        </div>
+    </main>
+</body>
+</html>

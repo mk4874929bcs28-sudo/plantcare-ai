@@ -1,10 +1,17 @@
+import psycopg
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_babel import Babel,get_locale
+from dotenv import load_dotenv
+
+load_dotenv()
 import oracledb
 import os
+import uuid
+import cv2
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -130,7 +137,31 @@ TRANSLATIONS = {
         "explore_plantcare": "Explore PlantCare AI",
         "plantcare_tip": "PlantCare Tip",
         "tip_text": "Use clear, well-lit leaf images for better AI detection accuracy. Check your plants regularly to catch diseases early.",
-
+                "main_menu": "MAIN MENU",
+        "account": "ACCOUNT",
+        "my_profile": "My Profile",
+        "notifications": "Notifications",
+        "recent_activity": "RECENT ACTIVITY",
+        "latest_result": "LATEST RESULT",
+        "latest_plant_prediction": "Latest Plant Prediction",
+        "plant": "Plant",
+        "detected_disease": "Detected Disease",
+        "confidence": "Confidence",
+        "estimated_severity": "Estimated Severity",
+        "recommended_remedy": "Recommended Remedy",
+        "prevention": "Prevention",
+        "chemical_treatment": "Chemical Treatment",
+        "severity_disclaimer": "Severity is an experimental colour-based estimate, not a validated diagnosis.",
+        "healthy_classifier_message": "The classifier identified this plant as healthy. Disease severity is not applicable.",
+        "analyze_another_plant": "Analyze Another Plant",
+        "start_new_analysis": "Start a new plant analysis",
+        "unavailable": "Unavailable",
+        "no_remedy_info": "No remedy information available.",
+        "no_prevention_info": "No prevention information available.",
+        "no_chemical_info": "No chemical treatment information available.",
+        "my_profile": "My Profile",
+        "send_message": "Send Message",
+        "add_new_plant": "Add New Plant",
         # =========================
         # LANGUAGE
         # =========================
@@ -259,7 +290,9 @@ TRANSLATIONS = {
         "explore_plantcare": "PlantCare AI-ஐ ஆராயுங்கள்",
         "plantcare_tip": "PlantCare குறிப்பு",
         "tip_text": "சிறந்த AI கண்டறிதல் துல்லியத்திற்காக தெளிவான, நல்ல வெளிச்சம் உள்ள தாவர இலைப் படங்களைப் பயன்படுத்தவும். நோய்களை ஆரம்பத்திலேயே கண்டறிய உங்கள் தாவரங்களைத் தொடர்ந்து சரிபார்க்கவும்.",
-
+        "my_profile": "எனது சுயவிவரம்",
+        "send_message": "செய்தி அனுப்பு",
+        "add_new_plant": "புதிய தாவரத்தைச் சேர்",
         # =========================
         # LANGUAGE
         # =========================
@@ -268,6 +301,78 @@ TRANSLATIONS = {
         "tamil": "தமிழ்"
     }
 }
+TAMIL_GUIDE = {
+
+    "Bacterial Spot": {
+        "name": "பாக்டீரியா புள்ளி நோய்",
+        "description": "தக்காளியில் ஏற்படும் பாக்டீரியா புள்ளி நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, தேவையானால் பொருத்தமான பாக்டீரியா எதிர்ப்பு மருந்தைப் பயன்படுத்தவும்.",
+        "prevention": "மேலிருந்து நீர் பாய்ச்சுவதைத் தவிர்த்து, நல்ல சுகாதாரத்தைப் பராமரிக்கவும்."
+    },
+
+    "Early Blight": {
+        "name": "ஆரம்ப கருகல் நோய்",
+        "description": "தக்காளியின் இலைகள் மற்றும் பழங்களை பாதிக்கும் பொதுவான பூஞ்சை நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, மருந்தின் வழிமுறைகளின்படி பொருத்தமான பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+        "prevention": "தாவரத்தைச் சுற்றியுள்ள பகுதியை சுத்தமாக வைத்திருந்து, பாதிக்கப்பட்ட தாவரப் பகுதிகளை அகற்றி, இலைகளில் நீர் நீண்ட நேரம் தங்குவதைத் தவிர்க்கவும்."
+    },
+
+    "Healthy": {
+        "name": "ஆரோக்கியமான தாவரம்",
+        "description": "ஆரோக்கியமான தாவரம்.",
+        "remedy": "ஆரோக்கியமான தாவரத்திற்கு சிகிச்சை தேவையில்லை.",
+        "prevention": "தொடர்ந்து சரியான நீர்ப்பாசனம், ஊட்டச்சத்து மற்றும் தாவர கண்காணிப்பை மேற்கொள்ளவும்."
+    },
+
+    "Late Blight": {
+        "name": "தாமத கருகல் நோய்",
+        "description": "தக்காளியின் இலைகள் மற்றும் பழங்களில் கருமையான புள்ளிகள் அல்லது காயங்களை ஏற்படுத்தும் தீவிர நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, பொருத்தமான பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+        "prevention": "மேலிருந்து நீர் பாய்ச்சுவதைத் தவிர்த்து, நல்ல காற்றோட்டத்தைப் பராமரிக்கவும்."
+    },
+
+    "Leaf Mold": {
+        "name": "இலை பூஞ்சை நோய்",
+        "description": "தக்காளி இலைகளில் மஞ்சள் புள்ளிகள் மற்றும் பூஞ்சை வளர்ச்சியை ஏற்படுத்தும் பூஞ்சை நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, நல்ல காற்றோட்டத்தை ஏற்படுத்தவும். பொருத்தமான பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+        "prevention": "இலைகளை ஈரமாக்குவதைத் தவிர்த்து, பாதிக்கப்பட்ட தாவரக் கழிவுகளை அகற்றவும்."
+    },
+
+    "Septoria Leaf Spot": {
+        "name": "செப்டோரியா இலைப் புள்ளி நோய்",
+        "description": "தக்காளியில் ஏற்படும் செப்டோரியா இலைப் புள்ளி நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, பொருத்தமான பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+        "prevention": "மேலிருந்து நீர் பாய்ச்சுவதைத் தவிர்த்து, பாதிக்கப்பட்ட தாவரக் கழிவுகளை அகற்றவும்."
+    },
+
+    "Spider Mites Two Spotted Spider Mite": {
+        "name": "இரண்டு புள்ளி சிலந்திப் பூச்சி தாக்குதல்",
+        "description": "தக்காளியில் ஏற்படும் சிலந்திப் பூச்சி தாக்குதல்.",
+        "remedy": "கடுமையாக பாதிக்கப்பட்ட இலைகளை அகற்றி, பொருத்தமான பூச்சி/மைட் கட்டுப்பாட்டு சிகிச்சையைப் பயன்படுத்தவும்.",
+        "prevention": "தாவரங்களை தொடர்ந்து பரிசோதித்து, சிலந்திப் பூச்சிகளுக்கு தங்குமிடமாக இருக்கும் களைகளை கட்டுப்படுத்தவும்."
+    },
+
+    "Target Spot": {
+        "name": "இலக்கு புள்ளி நோய்",
+        "description": "தக்காளியில் ஏற்படும் இலக்கு புள்ளி நோய்.",
+        "remedy": "பாதிக்கப்பட்ட இலைகளை அகற்றி, பொருத்தமான பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+        "prevention": "நல்ல காற்றோட்டத்தைப் பராமரித்து, இலைகளில் நீர் நீண்ட நேரம் தங்குவதைத் தவிர்க்கவும்."
+    },
+
+    "Tomato Mosaic Virus": {
+        "name": "தக்காளி மொசைக் வைரஸ்",
+        "description": "தக்காளியில் ஏற்படும் மொசைக் வைரஸ் நோய்.",
+        "remedy": "தேவையான போது பாதிக்கப்பட்ட தாவரங்களை அகற்றி, நோயைப் பரப்பும் பூச்சிகளைக் கட்டுப்படுத்தவும்.",
+        "prevention": "ஆரோக்கியமான நடவு பொருட்களைப் பயன்படுத்தி, நோயைப் பரப்பும் பூச்சிகளைக் கட்டுப்படுத்தவும்."
+    },
+
+    "Tomato Yellow Leaf Curl Virus": {
+        "name": "தக்காளி மஞ்சள் இலை சுருள் வைரஸ்",
+        "description": "தக்காளி இலைகளில் மஞ்சள் நிறம் மற்றும் சுருட்டலை ஏற்படுத்தும் வைரஸ் நோய்.",
+        "remedy": "கடுமையாக பாதிக்கப்பட்ட தாவரங்களை அகற்றி, நோயைப் பரப்பும் பூச்சிகளைக் கட்டுப்படுத்தவும்.",
+        "prevention": "ஆரோக்கியமான தாவரங்களைப் பயன்படுத்தி, வெள்ளை ஈக்களின் எண்ணிக்கையை கட்டுப்படுத்தவும்."
+    }
+}  
 # ============================================================
 # ADD THESE KEYS to TRANSLATIONS["en"] and TRANSLATIONS["ta"]
 # in app.py (merge into your existing dict, don't replace it)
@@ -551,14 +656,180 @@ print("Number of classes:", len(class_names))
 # ============================================================
 
 app = Flask(__name__)
+app.config["PROFILE_UPLOAD_FOLDER"] = os.path.join(
+    app.root_path, "static", "profile_photos"
+)
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB
 
+os.makedirs(app.config["PROFILE_UPLOAD_FOLDER"], exist_ok=True)
+
+ALLOWED_PROFILE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+
+def allowed_profile_image(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_PROFILE_EXTENSIONS
+    )
 app.secret_key = "plantcare-ai-secret-key"
 app.config["BABEL_DEFAULT_LOCALE"] = "en"
 app.config["BABEL_SUPPORTED_LOCALES"] = ["en", "ta"]
 
 def get_user_locale():
     return session.get("language", "en")
+@app.route("/notifications")
+def notifications():
 
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                notification_id,
+                title,
+                message,
+                type,
+                is_read,
+                created_at
+            FROM NOTIFICATIONS
+            WHERE user_id = :user_id
+            ORDER BY created_at DESC
+        """, {
+            "user_id": session["user_id"]
+        })
+
+        notification_list = cursor.fetchall()
+
+        return render_template(
+            "notifications.html",
+            notifications=notification_list
+        )
+
+    except oracledb.Error as error:
+        print("Notification Error:", error)
+        return redirect(url_for("dashboard"))
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+@app.route("/notifications/mark-read/<int:notification_id>", methods=["POST"])
+def mark_notification_read(notification_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE NOTIFICATIONS
+            SET IS_READ = 1,
+                READ_AT = SYSTIMESTAMP
+            WHERE NOTIFICATION_ID = :notification_id
+            AND USER_ID = :user_id
+            """,
+            {
+                "notification_id": notification_id,
+                "user_id": session["user_id"]
+            }
+        )
+
+        connection.commit()
+
+        return redirect(
+            url_for("notifications")
+        )
+
+    except oracledb.Error as error:
+
+        print(
+            "Mark Notification Read Error:",
+            error
+        )
+
+        if connection:
+            connection.rollback()
+
+        return redirect(
+            url_for("notifications")
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
+@app.route("/notifications/mark-all-read", methods=["POST"])
+def mark_all_notifications_read():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE NOTIFICATIONS
+            SET IS_READ = 1,
+                READ_AT = SYSTIMESTAMP
+            WHERE USER_ID = :user_id
+            AND IS_READ = 0
+            """,
+            {
+                "user_id": session["user_id"]
+            }
+        )
+
+        connection.commit()
+
+        return redirect(
+            url_for("notifications")
+        )
+
+    except oracledb.Error as error:
+
+        print(
+            "Mark All Notifications Read Error:",
+            error
+        )
+
+        if connection:
+            connection.rollback()
+
+        return redirect(
+            url_for("notifications")
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
 
 babel = Babel(
     app,
@@ -566,10 +837,9 @@ babel = Babel(
 )
 
 
-
-ORACLE_USER = "system"
-ORACLE_PASSWORD = "1234"
-ORACLE_DSN = "localhost:1521/XEPDB1"
+ORACLE_USER = os.getenv("ORACLE_USER")
+ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
+ORACLE_DSN = os.getenv("ORACLE_DSN")
 # ==========================================
 # LANGUAGE SWITCH
 # ==========================================
@@ -609,8 +879,150 @@ def get_db_connection():
         password=ORACLE_PASSWORD,
         dsn=ORACLE_DSN
     )
+def add_notification(
+    cursor,
+    user_id,
+    title,
+    message,
+    notification_type="info",
+    sender_id=None,
+    link_url=None
+):
+    cursor.execute("""
+        INSERT INTO NOTIFICATIONS (
+            NOTIFICATION_ID,
+            USER_ID,
+            SENDER_ID,
+            TITLE,
+            MESSAGE,
+            TYPE,
+            IS_READ,
+            CREATED_AT,
+            LINK_URL
+        )
+        VALUES (
+            NOTIFICATIONS_SEQ.NEXTVAL,
+            :user_id,
+            :sender_id,
+            :title,
+            :message,
+            :notification_type,
+            0,
+            SYSTIMESTAMP,
+            :link_url
+        )
+    """, {
+        "user_id": user_id,
+        "sender_id": sender_id,
+        "title": title,
+        "message": message,
+        "notification_type": notification_type,
+        "link_url": link_url
+    })
+def notify_all_admins(
+    cursor,
+    title,
+    message,
+    notification_type="info",
+    sender_id=None,
+    link_url=None
+):
+    cursor.execute("""
+        SELECT USER_ID
+        FROM USERS
+        WHERE UPPER(ROLE) = 'ADMIN'
+    """)
 
+    admins = cursor.fetchall()
 
+    for admin in admins:
+        admin_id = admin[0]
+
+        add_notification(
+            cursor=cursor,
+            user_id=admin_id,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            sender_id=sender_id,
+            link_url=link_url
+        )
+def estimate_severity(image_path):
+    """
+    Experimental visual estimate only.
+    This does not provide a validated plant-disease severity diagnosis.
+    """
+    image = cv2.imread(image_path)
+
+    if image is None:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "Image could not be analyzed."
+        }
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (224, 224))
+
+    # Approximate green leaf pixels in HSV color space
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
+    lower_green = np.array([25, 25, 20])
+    upper_green = np.array([100, 255, 255])
+
+    green_mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    # Approximate leaf region; not a reliable leaf segmentation model
+    leaf_pixels = cv2.countNonZero(green_mask)
+    total_pixels = image.shape[0] * image.shape[1]
+
+    if leaf_pixels < total_pixels * 0.05:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "A clear leaf region could not be identified."
+        }
+
+    # Non-green pixels inside the estimated leaf bounding region
+    contours, _ = cv2.findContours(
+        green_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    largest = max(contours, key=cv2.contourArea)
+    x, y, w, h = cv2.boundingRect(largest)
+
+    region = image[y:y+h, x:x+w]
+    region_hsv = cv2.cvtColor(region, cv2.COLOR_RGB2HSV)
+
+    green_region = cv2.inRange(
+        region_hsv,
+        np.array([25, 25, 20]),
+        np.array([100, 255, 255])
+    )
+
+    region_pixels = region.shape[0] * region.shape[1]
+    green_pixels = cv2.countNonZero(green_region)
+
+    # Non-green pixels are NOT necessarily diseased tissue.
+    # This is only an experimental colour-based proxy.
+    estimated_non_green = max(0, region_pixels - green_pixels)
+    percentage = (estimated_non_green / max(region_pixels, 1)) * 100
+
+    if percentage < 15:
+        severity = "MILD"
+    elif percentage < 35:
+        severity = "MODERATE"
+    else:
+        severity = "SEVERE"
+
+    return {
+        "severity": severity,
+        "affected_percentage": round(percentage, 1),
+        "note": (
+            "Experimental colour estimate only; lighting, leaf colour, "
+            "background and natural leaf features can affect this result."
+        )
+    }
 # ============================================================
 # ML PREDICTION FUNCTION
 # ============================================================
@@ -688,32 +1100,89 @@ def login():
 
                 if check_password_hash(password_hash, password):
 
+                    # -----------------------------------------
+                    # SAVE USER SESSION
+                    # -----------------------------------------
+
                     session["user_id"] = user_id
                     session["full_name"] = full_name
                     session["email"] = email
                     session["role"] = role
 
+                    # -----------------------------------------
+                    # NOTIFY ADMINS ABOUT USER LOGIN
+                    # -----------------------------------------
+
+                    if role != "ADMIN":
+
+                        notify_all_admins(
+                            cursor=cursor,
+                            title="User Login",
+                            message=(
+                                f"{full_name} logged into "
+                                f"PlantCare AI."
+                            ),
+                            notification_type="login",
+                            sender_id=user_id
+                        )
+
+                        connection.commit()
+
+                    # -----------------------------------------
+                    # ADMIN LOGIN
+                    # -----------------------------------------
+
                     if role == "ADMIN":
+
                         return redirect(
                             url_for("admin_dashboard")
                         )
 
+                    # -----------------------------------------
+                    # NORMAL USER LOGIN
+                    # -----------------------------------------
+
                     else:
+
                         return redirect(
-                            url_for("dashboard")
+                            url_for("home")
                         )
 
             flash("Invalid email or password.")
 
-            return redirect(url_for("login"))
+            return redirect(
+                url_for("login")
+            )
 
         except oracledb.Error as error:
 
             print("Oracle Error:", error)
 
-            flash("Unable to connect to the database.")
+            if connection:
+                connection.rollback()
 
-            return redirect(url_for("login"))
+            flash(
+                "Unable to connect to the database."
+            )
+
+            return redirect(
+                url_for("login")
+            )
+
+        except Exception as error:
+
+            print("Login Notification Error:", error)
+
+            if connection:
+                connection.rollback()
+
+            flash(
+                "Unable to complete login."
+            )
+
+            return redirect(
+                url_for("login")
+            )
 
         finally:
 
@@ -724,8 +1193,6 @@ def login():
                 connection.close()
 
     return render_template("login.html")
-
-
 # ============================================================
 # REGISTER
 # ============================================================
@@ -774,6 +1241,10 @@ def register():
 
             cursor = connection.cursor()
 
+            # -------------------------------------------------
+            # 1. CREATE NEW USER
+            # -------------------------------------------------
+
             cursor.execute(
                 """
                 INSERT INTO USERS
@@ -788,9 +1259,53 @@ def register():
                 }
             )
 
+            # -------------------------------------------------
+            # 2. GET NEW USER ID
+            # -------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT USER_ID
+                FROM USERS
+                WHERE EMAIL = :email
+                """,
+                {
+                    "email": email
+                }
+            )
+
+            new_user = cursor.fetchone()
+
+            if new_user:
+
+                new_user_id = new_user[0]
+
+                # -------------------------------------------------
+                # 3. NOTIFY ALL ADMINS
+                # -------------------------------------------------
+
+                notify_all_admins(
+                    cursor=cursor,
+                    title="New User Registered",
+                    message=(
+                        f"{full_name} has created a new "
+                        f"PlantCare AI account."
+                    ),
+                    notification_type="registration",
+                    sender_id=new_user_id
+                )
+
+            # -------------------------------------------------
+            # 4. SAVE USER + NOTIFICATION
+            # -------------------------------------------------
+
             connection.commit()
 
             print("USER INSERTED SUCCESSFULLY!")
+
+            print(
+                "ADMIN REGISTRATION NOTIFICATION CREATED!"
+            )
 
             return redirect(
                 url_for("login")
@@ -805,6 +1320,15 @@ def register():
 
             return f"Oracle error: {error}"
 
+        except Exception as error:
+
+            print("REGISTRATION ERROR:", error)
+
+            if connection:
+                connection.rollback()
+
+            return f"Registration error: {error}"
+
         finally:
 
             if cursor:
@@ -814,8 +1338,6 @@ def register():
                 connection.close()
 
     return render_template("register.html")
-
-
 # ============================================================
 # LOGOUT
 # ============================================================
@@ -846,6 +1368,20 @@ def dashboard():
         cursor = connection.cursor()
 
         user_id = session["user_id"]
+                # ==========================================
+        # UNREAD NOTIFICATION COUNT
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM NOTIFICATIONS
+            WHERE user_id = :user_id
+            AND is_read = 0
+        """, {
+            "user_id": user_id
+        })
+
+        unread_notifications = cursor.fetchone()[0] or 0
 
         # ==========================================
         # 1. TOTAL PREDICTIONS
@@ -987,16 +1523,41 @@ def dashboard():
         r.prevention,
         r.chemical_remedy
     FROM prediction_history ph
-    LEFT JOIN diseases d
-        ON LOWER(TRIM(ph.disease_name)) = LOWER(TRIM(d.disease_name))
-    LEFT JOIN remedies r
-        ON r.disease_id = d.disease_id
+    LEFT JOIN PLANTS p
+    ON LOWER(TRIM(ph.plant_name))
+    = LOWER(TRIM(p.plant_name))
+
+    LEFT JOIN DISEASES d
+    ON d.plant_id = p.plant_id
+    AND LOWER(TRIM(ph.disease_name))
+    = LOWER(TRIM(d.disease_name))
+
+        LEFT JOIN REMEDIES r
+    ON r.remedy_id = (
+        SELECT r2.remedy_id
+        FROM REMEDIES r2
+        WHERE r2.disease_id = d.disease_id
+        AND (
+            UPPER(TRIM(r2.severity_level)) =
+                UPPER(TRIM(ph.severity_level))
+            OR r2.severity_level IS NULL
+        )
+        ORDER BY
+            CASE
+                WHEN UPPER(TRIM(r2.severity_level)) =
+                    UPPER(TRIM(ph.severity_level))
+                THEN 0
+                ELSE 1
+            END,
+            r2.remedy_id
+        FETCH FIRST 1 ROW ONLY
+    )
     WHERE ph.user_id = :user_id
     ORDER BY ph.predicted_at DESC
     FETCH FIRST 6 ROWS ONLY
-""", {
+    """, {
     "user_id": user_id
-})
+    })
         rows = cursor.fetchall()
 
         recent_predictions = []
@@ -1027,17 +1588,41 @@ def dashboard():
         ph.image_path,
         ph.predicted_at,
         d.description,
+        ph.severity_level,
         r.remedy,
         r.prevention,
         r.chemical_remedy
         FROM PREDICTION_HISTORY ph
 
-        LEFT JOIN DISEASES d
-        ON LOWER(TRIM(ph.disease_name))
-         = LOWER(TRIM(d.disease_name))
+        LEFT JOIN PLANTS p
+        ON LOWER(TRIM(ph.plant_name))
+         = LOWER(TRIM(p.plant_name))
 
-        LEFT JOIN REMEDIES r
-        ON r.disease_id = d.disease_id
+        LEFT JOIN DISEASES d
+        ON d.plant_id = p.plant_id
+        AND LOWER(TRIM(ph.disease_name))
+        = LOWER(TRIM(d.disease_name))
+
+                LEFT JOIN REMEDIES r
+        ON r.remedy_id = (
+            SELECT r2.remedy_id
+            FROM REMEDIES r2
+            WHERE r2.disease_id = d.disease_id
+            AND (
+                UPPER(TRIM(r2.severity_level)) =
+                    UPPER(TRIM(ph.severity_level))
+                OR r2.severity_level IS NULL
+            )
+            ORDER BY
+                CASE
+                    WHEN UPPER(TRIM(r2.severity_level)) =
+                        UPPER(TRIM(ph.severity_level))
+                    THEN 0
+                    ELSE 1
+                END,
+                r2.remedy_id
+            FETCH FIRST 1 ROW ONLY
+        )
 
         WHERE ph.user_id = :user_id
 
@@ -1059,9 +1644,10 @@ def dashboard():
             "image_path": latest_row[3],
             "prediction_date": latest_row[4],
             "description": latest_row[5],
-            "remedy": latest_row[6],
-            "prevention": latest_row[7],
-            "chemical_remedy": latest_row[8]
+            "severity": latest_row[6],
+            "remedy": latest_row[7],
+            "prevention": latest_row[8],
+            "chemical_remedy": latest_row[9]
             }
 
         print("====================================")
@@ -1088,6 +1674,7 @@ def dashboard():
     plants_analyzed=plants_analyzed,
 
     healthy_plants=healthy_plants,
+    unread_notifications=unread_notifications,
 
     recent_predictions=recent_predictions,
     latest_prediction=latest_prediction,
@@ -1125,6 +1712,7 @@ def detect():
         return redirect(url_for("login"))
 
     return render_template("detect.html")
+
 @app.route("/predict", methods=["POST"])
 def predict():
 
@@ -1162,27 +1750,50 @@ def predict():
 
         predicted_class, confidence = predict_disease(image_path)
 
+# Clean the predicted class name before checking its status
+        if "___" in predicted_class:
+            plant_name, disease_name = predicted_class.split("___", 1)
+        else:
+            plant_name = predicted_class
+            disease_name = predicted_class
+
+        disease_check = disease_name.strip().lower().replace("_", " ")
+
+        if disease_check == "healthy":
+            severity_result = {
+                "severity": "Not Applicable — Healthy Plant",
+                "affected_percentage": None,
+                "note": "No disease was detected by the classifier. This does not guarantee the plant is disease-free."
+            }
+        else:
+            severity_result = estimate_severity(image_path)
+
         print("Predicted disease:", predicted_class)
-        
         print("Confidence:", confidence)
-        CONFIDENCE_THRESHOLD = 70  # percent — tune this if needed
+        print("Estimated severity:", severity_result["severity"])
+        print(
+            "Estimated non-green area:",
+            severity_result["affected_percentage"]
+        )
 
-        if confidence < CONFIDENCE_THRESHOLD:
+        CONFIDENCE_THRESHOLD = 70
 
-            flash(
-                "The AI isn't confident this is a plant leaf "
-                "(confidence: {:.1f}%). Please upload a clearer, "
-                "well-lit photo of a plant leaf.".format(confidence)
+        low_confidence = confidence < CONFIDENCE_THRESHOLD
+
+        if low_confidence:
+            print(
+                f"LOW CONFIDENCE: {confidence:.2f}%. "
+                "Showing prediction with a warning."
             )
-
-            return redirect(url_for("detect"))
         # ==========================================
         # STEP 2: SPLIT ML CLASS
         # ==========================================
 
         if "___" in predicted_class:
 
-            plant_name, disease_name = predicted_class.split("___", 1)
+            plant_name, disease_name = predicted_class.split(
+                "___", 1
+            )
 
         else:
 
@@ -1193,43 +1804,61 @@ def predict():
         # CLEAN PLANT NAME
         # ==========================================
 
-        plant_name = plant_name.replace("_(including_sour)", "")
-        plant_name = plant_name.replace("_(maize)", "")
-        plant_name = plant_name.replace(",_bell", "")
+        plant_name = plant_name.replace(
+            "_(including_sour)", ""
+        )
+
+        plant_name = plant_name.replace(
+            "_(maize)", ""
+        )
+
+        plant_name = plant_name.replace(
+            ",_bell", ""
+        )
 
         # ==========================================
         # CLEAN DISEASE NAME
         # ==========================================
-        # ==========================================
-# CLEAN DISEASE NAME
-# ==========================================
 
-        disease_name = disease_name.replace("_", " ")
+        disease_name = disease_name.replace(
+            "_", " "
+        )
 
-# Remove brackets from ML class names
-        disease_name = disease_name.replace("(", "")
-        disease_name = disease_name.replace(")", "")
+        disease_name = disease_name.replace(
+            "(", ""
+        )
+
+        disease_name = disease_name.replace(
+            ")", ""
+        )
 
         disease_name = disease_name.replace(
             "Two-spotted",
             "Two Spotted"
         )
 
-# Remove extra spaces
-        disease_name = " ".join(disease_name.split())
+        disease_name = " ".join(
+            disease_name.split()
+        )
 
         disease_name = disease_name.strip()
 
-        print("CLEANED DISEASE NAME:", disease_name)
-       
+        print(
+            "CLEANED DISEASE NAME:",
+            disease_name
+        )
 
         # ==========================================
         # DEFAULT VALUES
         # ==========================================
 
-        remedy = "No remedy information available."
+        remedy = (
+            "No remedy information available."
+        )
 
-        prevention = "No prevention information available."
+        prevention = (
+            "No prevention information available."
+        )
 
         chemical_remedy = (
             "No chemical treatment information available."
@@ -1277,33 +1906,68 @@ def predict():
             database_disease_name = disease[1]
 
             description = disease[2] or ""
-
+            remedy_data=None
+                        # ======================================
+            # STEP 5: FIND SEVERITY-BASED REMEDY
             # ======================================
-            # STEP 5: FIND REMEDY
-            # ======================================
 
-            cursor.execute(
-                """
-                SELECT
-                    remedy,
-                    prevention,
-                    chemical_remedy
-                FROM REMEDIES
-                WHERE disease_id = :disease_id
-                """,
-                {
-                    "disease_id": disease_id
-                }
-            )
+            if "healthy" in database_disease_name.lower():
+                remedy = "No treatment needed based on this prediction."
+                prevention = (
+                    "Continue regular watering, provide suitable sunlight, "
+                    "and monitor the plant for changes."
+                )
+                chemical_remedy = (
+                    "Chemical treatment is not indicated for a healthy prediction."
+                )
 
-            remedy_data = cursor.fetchone()
+            else:
+                cursor.execute(
+                    """
+                    SELECT
+                        remedy,
+                        prevention,
+                        chemical_remedy
+                    FROM REMEDIES
+                    WHERE disease_id = :disease_id
+                    AND (
+                        UPPER(TRIM(severity_level)) =
+                            UPPER(TRIM(:severity))
+                        OR severity_level IS NULL
+                    )
+                    ORDER BY
+                        CASE
+                            WHEN UPPER(TRIM(severity_level)) =
+                                UPPER(TRIM(:severity))
+                            THEN 0
+                            ELSE 1
+                        END,
+                        remedy_id
+                    FETCH FIRST 1 ROW ONLY
+                    """,
+                    {
+                        "disease_id": disease_id,
+                        "severity": severity_result["severity"]
+                    }
+                )
+                remedy_data = None
+                remedy_data = cursor.fetchone()
 
+                if remedy_data:
+                    remedy = (
+                        remedy_data[0]
+                        or "No remedy information available."
+                    )
+                    prevention = (
+                        remedy_data[1]
+                        or "No prevention information available."
+                    )
+                    chemical_remedy = (
+                        remedy_data[2]
+                        or "Consult a local agricultural expert for suitable treatment."
+                    )
 
-            if remedy_data:
-                remedy = remedy_data[0] or "No organic remedy information available."
-                prevention = remedy_data[1] or "No prevention information available."
-                chemical_remedy = remedy_data[2] or "No chemical treatment information available."
-
+            print("SEVERITY:", severity_result["severity"])
             print("REMEDY:", remedy)
             print("PREVENTION:", prevention)
             print("CHEMICAL REMEDY:", chemical_remedy)
@@ -1313,75 +1977,156 @@ def predict():
             print("REMEDY DATA:", remedy_data)
             print("REMEDY:", remedy)
             print("PREVENTION:", prevention)
-            print("CHEMICAL REMEDY:", chemical_remedy)
+            print(
+                "CHEMICAL REMEDY:",
+                chemical_remedy
+            )
             print("====================================")
         # ==========================================
-        # STEP 6: SAVE PREDICTION HISTORY
+# STEP 6: SAVE PREDICTION HISTORY
+# ==========================================
+
+            cursor.execute(
+                """
+                INSERT INTO PREDICTION_HISTORY
+                (
+                    user_id,
+                    plant_name,
+                    disease_name,
+                    confidence,
+                    image_path,
+                    severity_level
+                )
+                VALUES
+                (
+                    :user_id,
+                    :plant_name,
+                    :disease_name,
+                    :confidence,
+                    :image_path,
+                    :severity_level
+                )
+                """,
+                {
+                    "user_id": session["user_id"],
+                    "plant_name": plant_name,
+                    "disease_name": database_disease_name,
+                    "confidence": round(confidence, 2),
+                    "image_path": image_path.replace("\\", "/"),
+                    "severity_level": severity_result["severity"]
+                }
+            )
+
+            print("Prediction history with severity saved successfully!")
+
+        # ==========================================
+        # STEP 7: CREATE NOTIFICATION DATA
         # ==========================================
 
-        cursor.execute(
-            """
-            INSERT INTO PREDICTION_HISTORY
-            (
-                user_id,
-                plant_name,
-                disease_name,
-                confidence,
-                image_path
-            )
-            VALUES
-            (
-                :user_id,
-                :plant_name,
-                :disease_name,
-                :confidence,
-                :image_path
-            )
-            """,
-            {
-                "user_id": session["user_id"],
-                "plant_name": plant_name,
-                "disease_name": database_disease_name,
-                "confidence": round(confidence, 2),
-                "image_path": image_path.replace("\\", "/")
-            }
+        confidence_value = round(
+            confidence,
+            2
         )
+
+        # ------------------------------------------
+        # NOTIFICATION TO ADMIN
+        # ------------------------------------------
+
+        notify_all_admins(
+            cursor=cursor,
+            title="New Disease Prediction",
+            message=(
+                f"{session['full_name']} predicted "
+                f"{plant_name} - "
+                f"{database_disease_name} "
+                f"with {confidence_value:.2f}% confidence."
+            ),
+            notification_type="prediction",
+            sender_id=session["user_id"]
+        )
+
+        # ------------------------------------------
+        # NOTIFICATION TO USER
+        # ------------------------------------------
+
+        add_notification(
+            cursor=cursor,
+            user_id=session["user_id"],
+            title="Prediction Completed",
+            message=(
+                f"Your {plant_name} prediction is "
+                f"{database_disease_name} "
+                f"with {confidence_value:.2f}% confidence."
+            ),
+            notification_type="prediction",
+            sender_id=session["user_id"]
+        )
+
+        # ==========================================
+        # STEP 8: COMMIT EVERYTHING
+        # ==========================================
 
         connection.commit()
 
-        print("Prediction history saved successfully!")
-                # ==========================================
-        # STEP 7: SHOW RESULT ON THE DETECT PAGE
+        print(
+            "Prediction notifications created successfully!"
+        )
+
+        # ==========================================
+        # STEP 9: SHOW RESULT ON DETECT PAGE
         # ==========================================
 
         latest_prediction = {
+
             "plant_name": plant_name,
+
             "disease_name": database_disease_name,
-            "confidence": round(confidence, 2),
-            "image_path": image_path.replace("\\", "/"),
+
+            "confidence": confidence_value,
+
+            "image_path": image_path.replace(
+                "\\",
+                "/"
+            ),
+
             "description": description,
+
             "remedy": remedy,
+
             "prevention": prevention,
-            "chemical_remedy": chemical_remedy
+
+            "chemical_remedy": chemical_remedy,
+            "severity": severity_result["severity"],
+            "affected_percentage": severity_result["affected_percentage"],
+            "severity_note": severity_result["note"]
         }
 
         return render_template(
             "detect.html",
             latest_prediction=latest_prediction
         )
+
+    # ==============================================
+    # ERROR HANDLING
     # ==============================================
 
     except Exception as error:
 
-        print("Prediction/Database Error:", error)
+        print(
+            "Prediction/Database Error:",
+            error
+        )
 
         if connection:
-
             connection.rollback()
 
-        flash("Unable to process the prediction.")
+        flash(
+            "Unable to process the prediction."
+        )
 
-        return redirect(url_for("dashboard"))
+        return redirect(
+            url_for("dashboard")
+        )
 
     # ==============================================
     # CLOSE DATABASE
@@ -1390,12 +2135,11 @@ def predict():
     finally:
 
         if cursor:
-
             cursor.close()
 
         if connection:
-
             connection.close()
+
 @app.route("/history")
 def history():
 
@@ -1574,15 +2318,11 @@ def plant_library():
 # ============================================================
 # ADMIN DASHBOARD
 # ============================================================
-
 @app.route("/admin-dashboard")
 def admin_dashboard():
 
     if session.get("role") != "ADMIN":
-
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
 
     connection = None
     cursor = None
@@ -1590,11 +2330,142 @@ def admin_dashboard():
     try:
 
         connection = get_db_connection()
-
         cursor = connection.cursor()
 
-        cursor.execute(
-            """
+        # -----------------------------------------
+        # 0. UNREAD NOTIFICATION COUNT
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM NOTIFICATIONS
+            WHERE user_id = :user_id
+            AND is_read = 0
+        """, {
+            "user_id": session["user_id"]
+        })
+
+        unread_notifications = cursor.fetchone()[0] or 0
+
+        # -----------------------------------------
+        # 1. TOTAL USERS
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM USERS
+        """)
+
+        total_users = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 2. TOTAL PREDICTIONS
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM PREDICTION_HISTORY
+        """)
+
+        total_predictions = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 3. HEALTHY PREDICTIONS
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM PREDICTION_HISTORY
+            WHERE UPPER(TRIM(DISEASE_NAME)) = 'HEALTHY'
+        """)
+
+        healthy_predictions = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 4. DISEASED PREDICTIONS
+        # -----------------------------------------
+        diseased_predictions = (
+            total_predictions - healthy_predictions
+        )
+
+        # -----------------------------------------
+        # 5. AVERAGE CONFIDENCE
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT NVL(AVG(CONFIDENCE), 0)
+            FROM PREDICTION_HISTORY
+        """)
+
+        avg_confidence = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 6. TOTAL DISEASES
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM DISEASES
+        """)
+
+        total_diseases = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 7. TOTAL REMEDIES
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM REMEDIES
+        """)
+
+        total_remedies = cursor.fetchone()[0]
+
+        # -----------------------------------------
+        # 8. DISEASE DISTRIBUTION
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT
+                DISEASE_NAME,
+                COUNT(*) AS TOTAL
+            FROM PREDICTION_HISTORY
+            GROUP BY DISEASE_NAME
+            ORDER BY TOTAL DESC
+        """)
+
+        disease_distribution = cursor.fetchall()
+
+        # -----------------------------------------
+        # 9. PLANT DISTRIBUTION
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT
+                PLANT_NAME,
+                COUNT(*) AS TOTAL
+            FROM PREDICTION_HISTORY
+            GROUP BY PLANT_NAME
+            ORDER BY TOTAL DESC
+        """)
+
+        plant_distribution = cursor.fetchall()
+
+        # -----------------------------------------
+        # 10. RECENT PREDICTIONS
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT
+                p.prediction_id,
+                u.full_name,
+                p.plant_name,
+                p.disease_name,
+                p.confidence,
+                p.predicted_at
+            FROM PREDICTION_HISTORY p
+            LEFT JOIN USERS u
+                ON p.user_id = u.user_id
+            ORDER BY p.predicted_at DESC
+            FETCH FIRST 10 ROWS ONLY
+        """)
+
+        recent_predictions = cursor.fetchall()
+
+        # -----------------------------------------
+        # 11. REGISTERED USERS
+        # -----------------------------------------
+        cursor.execute("""
             SELECT
                 user_id,
                 full_name,
@@ -1602,23 +2473,336 @@ def admin_dashboard():
                 role,
                 created_at
             FROM USERS
-            ORDER BY user_id
-            """
-        )
+            ORDER BY created_at DESC
+        """)
 
         users = cursor.fetchall()
 
+        # -----------------------------------------
+        # 12. SEND DATA TO TEMPLATE
+        # -----------------------------------------
         return render_template(
             "admin_dashboard.html",
+
+            unread_notifications=unread_notifications,
+
+            total_users=total_users,
+            total_predictions=total_predictions,
+
+            healthy_predictions=healthy_predictions,
+            diseased_predictions=diseased_predictions,
+
+            avg_confidence=float(
+                avg_confidence or 0
+            ),
+
+            total_diseases=total_diseases,
+            total_remedies=total_remedies,
+
+            disease_distribution=disease_distribution,
+            plant_distribution=plant_distribution,
+
+            recent_predictions=recent_predictions,
             users=users
         )
 
     except oracledb.Error as error:
 
-        return f"Oracle error: {error}"
+        print(
+            "Admin Dashboard Oracle Error:",
+            error
+        )
+
+        return f"""
+        <h2>Admin Dashboard Database Error</h2>
+        <p>{error}</p>
+        """
 
     finally:
 
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
+@app.route("/admin/send-message", methods=["POST"])
+def admin_send_message():
+
+    # -----------------------------------------
+    # ADMIN ONLY
+    # -----------------------------------------
+    if session.get("role") != "ADMIN":
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+
+        # -----------------------------------------
+        # GET FORM DATA
+        # -----------------------------------------
+        user_id = request.form.get("user_id", "").strip()
+        title = request.form.get("title", "").strip()
+        message = request.form.get("message", "").strip()
+
+        # -----------------------------------------
+        # VALIDATION
+        # -----------------------------------------
+        if not user_id or not message:
+            flash("Please select a user and enter a message.")
+            return redirect(url_for("admin_dashboard"))
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # -----------------------------------------
+        # CHECK USER EXISTS
+        # -----------------------------------------
+        cursor.execute("""
+            SELECT user_id, full_name
+            FROM USERS
+            WHERE user_id = :user_id
+        """, {
+            "user_id": int(user_id)
+        })
+
+        user = cursor.fetchone()
+
+        if not user:
+
+            flash("Selected user was not found.")
+
+            return redirect(
+                url_for("admin_dashboard")
+            )
+
+        target_user_id = user[0]
+        target_user_name = user[1]
+
+        # -----------------------------------------
+        # DEFAULT TITLE
+        # -----------------------------------------
+        if not title:
+            title = "Message from Admin"
+
+        # -----------------------------------------
+        # CREATE USER NOTIFICATION
+        # -----------------------------------------
+        add_notification(
+            cursor=cursor,
+            user_id=target_user_id,
+            title=title,
+            message=message,
+            notification_type="message",
+            sender_id=session.get("user_id")
+        )
+
+        # -----------------------------------------
+        # COMMIT
+        # -----------------------------------------
+        connection.commit()
+
+        print("====================================")
+        print("ADMIN MESSAGE SENT")
+        print("TO USER:", target_user_name)
+        print("USER ID:", target_user_id)
+        print("TITLE:", title)
+        print("MESSAGE:", message)
+        print("====================================")
+
+        flash(
+            f"Message sent successfully to {target_user_name}."
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    except oracledb.Error as error:
+
+        print(
+            "Admin Message Oracle Error:",
+            error
+        )
+
+        if connection:
+            connection.rollback()
+
+        flash(
+            "Unable to send message."
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    except Exception as error:
+
+        print(
+            "Admin Message Error:",
+            error
+        )
+
+        if connection:
+            connection.rollback()
+
+        flash(
+            "Unable to send message."
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+            
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+    user_id = session["user_id"]
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        if request.method == "POST":
+            action = request.form.get("action", "")
+
+            # -----------------------------
+            # UPDATE PROFILE PHOTO
+            # -----------------------------
+            if action == "update_photo":
+                photo = request.files.get("profile_photo")
+
+                if not photo or not photo.filename:
+                    flash("Please select a profile photo.")
+                    return redirect(url_for("profile"))
+
+                if not allowed_profile_image(photo.filename):
+                    flash("Upload JPG, JPEG, PNG, or WEBP only.")
+                    return redirect(url_for("profile"))
+
+                extension = photo.filename.rsplit(".", 1)[1].lower()
+                filename = f"{uuid.uuid4().hex}.{extension}"
+                photo_path = os.path.join(
+                    app.config["PROFILE_UPLOAD_FOLDER"], filename
+                )
+
+                photo.save(photo_path)
+
+                relative_path = f"profile_photos/{filename}"
+
+                cursor.execute("""
+                    UPDATE USERS
+                    SET PROFILE_PHOTO = :photo
+                    WHERE USER_ID = :user_id
+                """, {
+                    "photo": relative_path,
+                    "user_id": user_id
+                })
+
+                connection.commit()
+                flash("Profile photo updated successfully!")
+
+            # -----------------------------
+            # CHANGE PASSWORD
+            # -----------------------------
+            elif action == "change_password":
+                current_password = request.form.get("current_password", "")
+                new_password = request.form.get("new_password", "")
+                confirm_password = request.form.get("confirm_password", "")
+
+                if not current_password or not new_password or not confirm_password:
+                    flash("Please fill in all password fields.")
+                    return redirect(url_for("profile"))
+
+                if len(new_password) < 8:
+                    flash("New password must be at least 8 characters.")
+                    return redirect(url_for("profile"))
+
+                if new_password != confirm_password:
+                    flash("New passwords do not match.")
+                    return redirect(url_for("profile"))
+
+                cursor.execute("""
+                    SELECT PASSWORD_HASH
+                    FROM USERS
+                    WHERE USER_ID = :user_id
+                """, {"user_id": user_id})
+
+                password_row = cursor.fetchone()
+
+                if not password_row or not check_password_hash(
+                    password_row[0], current_password
+                ):
+                    flash("Current password is incorrect.")
+                    return redirect(url_for("profile"))
+
+                new_password_hash = generate_password_hash(new_password)
+
+                cursor.execute("""
+                    UPDATE USERS
+                    SET PASSWORD_HASH = :password_hash
+                    WHERE USER_ID = :user_id
+                """, {
+                    "password_hash": new_password_hash,
+                    "user_id": user_id
+                })
+
+                connection.commit()
+                flash("Password changed successfully!")
+
+            else:
+                flash("Invalid profile action.")
+
+            return redirect(url_for("profile"))
+
+        # -----------------------------
+        # LOAD USER PROFILE
+        # -----------------------------
+        cursor.execute("""
+            SELECT
+                USER_ID,
+                FULL_NAME,
+                EMAIL,
+                ROLE,
+                CREATED_AT,
+                PROFILE_PHOTO
+            FROM USERS
+            WHERE USER_ID = :user_id
+        """, {"user_id": user_id})
+
+        user = cursor.fetchone()
+
+        if not user:
+            session.clear()
+            return redirect(url_for("login"))
+
+        return render_template("profile.html", user=user)
+
+    except Exception as error:
+        print("Profile Error:", error)
+
+        if connection:
+            connection.rollback()
+
+        flash("Unable to update profile.")
+
+        return redirect(url_for("profile"))
+
+    finally:
         if cursor:
             cursor.close()
 
@@ -1707,7 +2891,253 @@ def update_plant_details():
         if connection:
             connection.close()
  
- 
+CARE_GUIDE = {
+    "Tomato": {
+        "water": {"en": "Water deeply 2-3 times a week. Keep soil moist, not soggy.", "ta": "வாரத்திற்கு 2-3 முறை ஆழமாக நீர் பாய்ச்சவும். மண் ஈரமாக இருக்கட்டும், ஆனால் தண்ணீர் தேங்கக்கூடாது."},
+        "sunlight": {"en": "6-8 hours of direct sunlight daily.", "ta": "தினமும் 6-8 மணி நேரம் நேரடி வெயில் தேவை."},
+        "soil": {"en": "Well-drained, loamy soil. pH 6.0-6.8.", "ta": "நன்கு வடிகால் உள்ள களிமண். pH 6.0-6.8."},
+        "fertilizer": {"en": "NPK 10-10-10 every 2 weeks after flowering.", "ta": "பூத்த பிறகு 2 வாரத்திற்கு ஒருமுறை NPK 10-10-10 உரம்."},
+        "season": {"en": "Best: June-Sep and Dec-Mar", "ta": "சிறந்த பருவம்: ஜூன்-செப், டிச்-மார்"},
+    },
+    "Potato": {
+        "water": {"en": "Regular watering, especially during tuber formation.", "ta": "கிழங்கு உருவாகும் நேரத்தில் தொடர்ந்து நீர் பாய்ச்சவும்."},
+        "sunlight": {"en": "Full sun, 6 hours minimum.", "ta": "குறைந்தது 6 மணி நேரம் வெயில் தேவை."},
+        "soil": {"en": "Loose, sandy loam soil. pH 5.0-6.0.", "ta": "தளர்வான மணல் கலந்த களிமண். pH 5.0-6.0."},
+        "fertilizer": {"en": "Potassium-rich fertilizer during planting.", "ta": "நடும்போது பொட்டாஷ் நிறைந்த உரம் இடவும்."},
+        "season": {"en": "Best: Oct-Jan", "ta": "சிறந்த பருவம்: அக்-ஜன"},
+    },
+    # meedhi 12 plants-kum inga add pannunga — Tamil translation help venum-na sollunga!
+}
+
+@app.route('/plant/<int:plant_id>')
+def plant_detail(plant_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Get plant
+        cursor.execute("""
+            SELECT plant_id, plant_name,image_path
+            FROM PLANTS
+            WHERE plant_id = :plant_id
+        """, {
+            "plant_id": plant_id
+        })
+
+        plant = cursor.fetchone()
+
+        if not plant:
+            flash("Plant not found.")
+            return redirect(url_for("plant_library"))
+
+        # Get diseases, description and remedies
+        cursor.execute("""
+            SELECT
+                d.disease_name,
+                d.description,
+                r.remedy,
+                r.prevention
+            FROM DISEASES d
+            LEFT JOIN REMEDIES r
+                ON d.disease_id = r.disease_id
+            WHERE d.plant_id = :plant_id
+            ORDER BY d.disease_name
+        """, {
+            "plant_id": plant_id
+        })
+
+        diseases = cursor.fetchall()
+
+        print("Plant:", plant)
+        print("Diseases found:", len(diseases))
+
+        return render_template(
+            "plant_detail.html",
+            plant=plant,
+            diseases=diseases,
+            tamil_guide=TAMIL_GUIDE
+            )
+    except oracledb.Error as error:
+
+        print("Plant Detail Error:", error)
+        flash("Unable to load plant details.")
+        return redirect(url_for("plant_library"))
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
+@app.route("/admin/send-message", methods=["GET"])
+def admin_send_message_page():
+    if "user_id" not in session or session.get("role") != "ADMIN":
+        flash("Admin access required.")
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT user_id, full_name, email
+            FROM USERS
+            ORDER BY full_name
+        """)
+        users = cursor.fetchall()
+
+        return render_template(
+            "admin_send_message.html",
+            users=users
+        )
+
+    except Exception as error:
+        print("Send Message Page Error:", repr(error))
+        flash("Unable to open Send Message page.")
+        return redirect(url_for("admin_dashboard"))
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+@app.route("/admin/add-plant", methods=["GET"])
+def add_plant():
+    if "user_id" not in session or session.get("role") != "ADMIN":
+        flash("Admin access required.")
+        return redirect(url_for("login"))
+
+    return render_template("admin_add_plant.html")
+@app.route("/admin/add-plant", methods=["POST"])
+def admin_add_plant():
+    if "user_id" not in session or session.get("role") != "ADMIN":
+        flash("Admin access required.")
+        return redirect(url_for("login"))
+
+    connection = None
+    cursor = None
+    image_path = None
+
+    try:
+        plant_name = request.form.get("plant_name", "").strip()
+        tamil_name = request.form.get("tamil_name", "").strip()
+        scientific_name = request.form.get("scientific_name", "").strip()
+        description = request.form.get("description", "").strip()
+        image = request.files.get("plant_image")
+
+        if not plant_name:
+            flash("Please enter the plant name.")
+            return redirect(url_for("admin_dashboard"))
+
+        if len(plant_name) > 100:
+            flash("Plant name must be within 100 characters.")
+            return redirect(url_for("admin_dashboard"))
+
+        if not image or not image.filename:
+            flash("Please select a plant image.")
+            return redirect(url_for("admin_dashboard"))
+
+        allowed_extensions = {"jpg", "jpeg", "png", "webp"}
+        original_name = secure_filename(image.filename)
+
+        if (
+            "." not in original_name
+            or original_name.rsplit(".", 1)[1].lower()
+            not in allowed_extensions
+        ):
+            flash("Upload JPG, JPEG, PNG or WEBP image.")
+            return redirect(url_for("admin_dashboard"))
+
+        # Save image inside static/plant-images
+        upload_folder = os.path.join(
+            app.root_path, "static", "plant-images"
+        )
+        os.makedirs(upload_folder, exist_ok=True)
+
+        extension = original_name.rsplit(".", 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{extension}"
+        image_path = os.path.join(upload_folder, filename)
+
+        image.save(image_path)
+
+        # Store a path relative to the static folder
+        database_image_path = f"plant-images/{filename}"
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Use the existing Oracle sequence if one exists;
+        # otherwise, generate an ID from the current maximum.
+        cursor.execute("""
+            SELECT NVL(MAX(PLANT_ID), 0) + 1
+            FROM PLANTS
+        """)
+        new_plant_id = cursor.fetchone()[0]
+
+        cursor.execute("""
+            INSERT INTO PLANTS (
+                PLANT_ID,
+                PLANT_NAME,
+                DESCRIPTION,
+                CREATED_AT,
+                TAMIL_NAME,
+                SCIENTIFIC_NAME,
+                IMAGE_PATH
+            )
+            VALUES (
+                :plant_id,
+                :plant_name,
+                :description,
+                SYSTIMESTAMP,
+                :tamil_name,
+                :scientific_name,
+                :image_path
+            )
+        """, {
+            "plant_id": new_plant_id,
+            "plant_name": plant_name,
+            "description": description or None,
+            "tamil_name": tamil_name or None,
+            "scientific_name": scientific_name or None,
+            "image_path": database_image_path
+        })
+
+        connection.commit()
+        image_path = None  # Keep uploaded file after successful insert
+
+        flash(f"{plant_name} added to Plant Library successfully!")
+
+    except Exception as error:
+        print("Admin Add Plant Error:", repr(error))
+
+        if connection:
+            connection.rollback()
+
+        if image_path and os.path.exists(image_path):
+            os.remove(image_path)
+
+        flash("Unable to add plant. Please check the application logs.")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+    return redirect(url_for("admin_dashboard"))
+
 
 # ============================================================
 # RUN APPLICATION

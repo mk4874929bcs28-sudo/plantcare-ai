@@ -1,59 +1,607 @@
+
 <!DOCTYPE html>
 <html lang="{{ current_language }}">
-
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#06110d">
 
     <title>{{ lang['sign_in_to_account'] }} | PlantCare AI</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 
+    <style>
+        body.auth-page {
+            --dark-bg: #06110d;
+            --panel-bg: #0b1913;
+            --input-bg: #0a1712;
+            --green: #36e581;
+            --green-dark: #16a35a;
+            --text-main: #f0f8f2;
+            --text-muted: #91a99a;
+            --border: rgba(126, 174, 143, .19);
+
+            margin: 0;
+            min-height: 100vh;
+            background: var(--dark-bg);
+            color: var(--text-main);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .auth-page *,
+        .auth-page *::before,
+        .auth-page *::after {
+            box-sizing: border-box;
+        }
+
+        .auth-page .auth-wrapper {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            width: min(1100px, calc(100% - 40px));
+            min-height: 650px;
+            margin: 5vh auto;
+            overflow: hidden;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .38);
+        }
+
+        .auth-page .auth-visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 36px;
+            overflow: hidden;
+            background:
+                radial-gradient(ellipse at 20% 15%, rgba(38, 171, 91, .25), transparent 45%),
+                radial-gradient(ellipse at 90% 90%, rgba(18, 104, 58, .24), transparent 45%),
+                #07140e;
+            border-right: 1px solid var(--border);
+        }
+
+        .auth-page .auth-visual::before {
+            content: "🌿";
+            position: absolute;
+            right: -25px;
+            bottom: 80px;
+            font-size: clamp(150px, 20vw, 260px);
+            opacity: .09;
+            transform: rotate(-18deg);
+            pointer-events: none;
+        }
+
+        .auth-page .auth-logo,
+        .auth-page .mobile-auth-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            font-size: 23px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .auth-page .auth-logo > span:first-child,
+        .auth-page .mobile-auth-logo {
+            color: var(--green);
+        }
+
+        .auth-page .auth-logo > span:nth-child(2),
+        .auth-page .mobile-auth-logo span {
+            color: var(--green);
+        }
+
+        .auth-page .auth-logo small {
+            align-self: flex-start;
+            margin-top: 3px;
+            color: var(--green);
+            font-size: 11px;
+        }
+
+        .auth-page .lang-switcher {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .auth-page .lang-switcher a {
+            padding: 8px 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            transition: .2s ease;
+        }
+
+        .auth-page .lang-switcher a:hover,
+        .auth-page .lang-switcher a.active {
+            color: var(--green);
+            background: rgba(54, 229, 129, .09);
+            border-color: rgba(54, 229, 129, .4);
+        }
+
+        .auth-page .auth-visual-content {
+            position: relative;
+            z-index: 1;
+            max-width: 420px;
+            margin: auto 0;
+            padding: 60px 0;
+        }
+
+        .auth-page .auth-badge {
+            display: inline-block;
+            padding: 8px 12px;
+            color: var(--green);
+            background: rgba(54, 229, 129, .08);
+            border: 1px solid rgba(54, 229, 129, .25);
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .auth-page .auth-visual-content h1 {
+            margin: 24px 0 14px;
+            font-family: 'Manrope', sans-serif;
+            font-size: clamp(30px, 4vw, 44px);
+            line-height: 1.2;
+            letter-spacing: -1.3px;
+        }
+
+        .auth-page .auth-visual-content p {
+            max-width: 350px;
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .auth-page .auth-mini-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 30px;
+            padding: 16px;
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        .auth-page .mini-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            place-items: center;
+            color: var(--green);
+            background: rgba(54, 229, 129, .12);
+            border-radius: 12px;
+            font-size: 22px;
+        }
+
+        .auth-page .auth-mini-card strong,
+        .auth-page .auth-mini-card span {
+            display: block;
+        }
+
+        .auth-page .auth-mini-card strong {
+            font-size: 14px;
+        }
+
+        .auth-page .auth-mini-card span {
+            margin-top: 5px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .auth-page .auth-visual-footer {
+            color: #6f8978;
+            font-size: 12px;
+        }
+
+        .auth-page .auth-form-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 42px;
+            background: linear-gradient(145deg, #0b1913, #08130e);
+        }
+
+        .auth-page .auth-form {
+            width: 100%;
+            max-width: 390px;
+        }
+
+        .auth-page .mobile-auth-logo {
+            display: none;
+        }
+
+        .auth-page .eyebrow {
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .auth-page .auth-heading h2 {
+            margin: 12px 0 8px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 30px;
+            letter-spacing: -.7px;
+        }
+
+        .auth-page .auth-heading p {
+            margin: 0 0 30px;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .auth-page .form-group {
+            margin-bottom: 22px;
+        }
+
+        .auth-page .form-group label,
+        .auth-page .password-label label {
+            display: block;
+            margin-bottom: 9px;
+            color: #dce9df;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .auth-page .password-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .auth-page .password-label a {
+            margin-bottom: 9px;
+            color: var(--green);
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .auth-page .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 52px;
+            padding: 0 15px;
+            background: var(--input-bg);
+            border: 1px solid #263d30;
+            border-radius: 12px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .auth-page .input-wrapper:focus-within {
+            border-color: var(--green-dark);
+            box-shadow: 0 0 0 3px rgba(54, 229, 129, .09);
+        }
+
+        .auth-page .input-wrapper > span {
+            color: var(--green);
+            font-size: 17px;
+        }
+
+        .auth-page .input-wrapper input {
+            width: 100%;
+            min-width: 0;
+            padding: 15px 0;
+            color: var(--text-main);
+            background: transparent;
+            border: 0;
+            outline: none;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .auth-page .input-wrapper input::placeholder {
+            color: #61776a;
+        }
+
+        .auth-page .input-wrapper input:-webkit-autofill,
+        .auth-page .input-wrapper input:-webkit-autofill:hover,
+        .auth-page .input-wrapper input:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--text-main);
+            -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset;
+            transition: background-color 9999s ease-in-out 0s;
+        }
+
+        .auth-page .password-toggle {
+            padding: 6px;
+            color: var(--text-muted);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .auth-page .remember-row {
+            margin: 5px 0 23px;
+        }
+
+        .auth-page .remember {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .auth-page .remember input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--green);
+        }
+
+        .auth-page .auth-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 52px;
+            padding: 14px 20px;
+            color: #052112;
+            background: linear-gradient(100deg, #36e581, #20c96d);
+            border: 0;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(32, 201, 109, .13);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .auth-page .auth-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(32, 201, 109, .22);
+        }
+
+        .auth-page .auth-submit span {
+            font-size: 20px;
+        }
+
+        .auth-page .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 27px 0;
+            color: #718778;
+            font-size: 12px;
+        }
+
+        .auth-page .auth-divider::before,
+        .auth-page .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .auth-page .auth-register {
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .auth-page .auth-register a {
+            margin-left: 5px;
+            color: var(--green);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .auth-page .auth-register a:hover,
+        .auth-page .password-label a:hover {
+            text-decoration: underline;
+        }
+        /* Fix input icon and text overlap */
+.auth-page .input-wrapper {
+    gap: 12px;
+    padding-left: 15px;
+}
+
+.auth-page .input-wrapper > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    min-width: 20px;
+    flex-shrink: 0;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.auth-page .input-wrapper input {
+    display: block;
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    margin: 0;
+    padding: 15px 0;
+    color: #f0f8f2;
+    background: transparent;
+    border: 0;
+    outline: none;
+    box-shadow: none;
+}
+.auth-page .input-wrapper {
+    padding-left: 16px;
+    gap: 0;
+}
+
+.auth-page .input-wrapper input {
+    width: 100%;
+    flex: 1;
+    min-width: 0;
+}
+
+.auth-page .input-wrapper input::placeholder {
+    color: #718778;
+}
+
+.auth-page .password-toggle {
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+.auth-page .field-icon {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    color: #36e581;
+}
+
+.auth-page .input-wrapper input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    margin: 0;
+}
+
+.auth-page .password-toggle {
+    flex-shrink: 0;
+}
+.auth-page .input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 15px;
+}
+
+.auth-page .field-icon {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    color: #36e581;
+}
+
+.auth-page .input-wrapper input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    padding: 15px 0;
+}
+
+.auth-page .password-toggle {
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+.auth-page .input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 15px;
+}
+
+.auth-page .field-icon {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    color: #36e581;
+}
+
+.auth-page .input-wrapper input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    padding: 15px 0;
+}
+
+.auth-page .password-toggle {
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+        @media (max-width: 760px) {
+            .auth-page .auth-wrapper {
+                grid-template-columns: 1fr;
+                width: min(480px, calc(100% - 28px));
+                min-height: auto;
+                margin: 20px auto;
+                border-radius: 20px;
+            }
+
+            .auth-page .auth-visual {
+                display: none;
+            }
+
+            .auth-page .auth-form-area {
+                padding: 30px 24px;
+            }
+
+            .auth-page .mobile-auth-logo {
+                display: inline-flex;
+                margin-bottom: 38px;
+                font-size: 21px;
+            }
+
+            .auth-page .auth-heading h2 {
+                font-size: 27px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .auth-page .auth-form-area {
+                padding: 24px 17px;
+            }
+
+            .auth-page .auth-heading h2 {
+                font-size: 24px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .auth-page *,
+            .auth-page *::before,
+            .auth-page *::after {
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 
 <body class="auth-page">
-
     <div class="auth-wrapper">
 
-        <!-- LEFT SIDE -->
+        <section class="auth-visual">
+            <div>
+                <a href="/" class="auth-logo">
+                    <span>🌿</span>
+                    Plant<span>Care</span><small>AI</small>
+                </a>
 
-        <div class="auth-visual">
-
-            <a href="/" class="auth-logo">
-                <span>🌿</span>
-                Plant<span>Care</span>
-                <small>AI</small>
-            </a>
-
-            <!-- LANGUAGE SWITCHER -->
-            <div class="lang-switcher" style="display:flex; gap:10px; margin-top:10px;">
-                <a href="{{ url_for('set_language', language='en') }}"
-                   style="color:white; opacity:{{ '1' if current_language == 'en' else '0.6' }};
-                          text-decoration:none; font-weight:600;">EN</a>
-                <a href="{{ url_for('set_language', language='ta') }}"
-                   style="color:white; opacity:{{ '1' if current_language == 'ta' else '0.6' }};
-                          text-decoration:none; font-weight:600;">தமிழ்</a>
+                <div class="lang-switcher">
+                    <a href="{{ url_for('set_language', language='en') }}"
+                       class="{{ 'active' if current_language == 'en' else '' }}"
+                       {% if current_language == 'en' %}aria-current="page"{% endif %}>
+                        EN
+                    </a>
+                    <a href="{{ url_for('set_language', language='ta') }}"
+                       class="{{ 'active' if current_language == 'ta' else '' }}"
+                       {% if current_language == 'ta' %}aria-current="page"{% endif %}>
+                        தமிழ்
+                    </a>
+                </div>
             </div>
 
             <div class="auth-visual-content">
-
                 <div class="auth-badge">
-                    {{ lang['smart_plant_health_badge'] }}
+                    🌱 {{ lang['smart_plant_health_badge'] }}
                 </div>
 
-                <h1>
-                    {{ lang['welcome_back_healthier'] }}
-                </h1>
+                <h1>{{ lang['welcome_back_healthier'] }}</h1>
 
-                <p>
-                    {{ lang['login_subtitle'] }}
-                </p>
+                <p>{{ lang['login_subtitle'] }}</p>
 
                 <div class="auth-mini-card">
                     <div class="mini-icon">✓</div>
@@ -62,92 +610,74 @@
                         <span>{{ lang['ready_when_you_are'] }}</span>
                     </div>
                 </div>
-
             </div>
 
             <div class="auth-visual-footer">
-                © 2026 PlantCare AI
+                © 2026 PlantCare AI · Grow greener
             </div>
+        </section>
 
-        </div>
-
-
-        <!-- RIGHT SIDE -->
-
-        <div class="auth-form-area">
-
-            <a href="/" class="mobile-auth-logo">
-                🌿 Plant<span>Care</span> AI
-            </a>
-
+        <main class="auth-form-area">
             <div class="auth-form">
 
-                <div class="auth-heading">
+                <a href="/" class="mobile-auth-logo">
+                    🌿 Plant<span>Care</span> AI
+                </a>
 
+                <div class="auth-heading">
                     <span class="eyebrow">
                         {{ lang.get('welcome_back', 'WELCOME BACK') }}
                     </span>
 
-                    <h2>
-                        {{ lang['sign_in_to_account'] }}
-                    </h2>
-
-                    <p>
-                        {{ lang['enter_details_continue'] }}
-                    </p>
-
+                    <h2>{{ lang['sign_in_to_account'] }}</h2>
+                    <p>{{ lang['enter_details_continue'] }}</p>
                 </div>
 
-
                 <form method="POST" action="{{ url_for('login') }}">
-
                     <div class="form-group">
+                        <label for="email">{{ lang['email_address'] }}</label>
 
-                        <label for="email">
-                            {{ lang['email_address'] }}
-                        </label>
+                     <div class="input-wrapper">
+    <svg class="field-icon" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="1.7"
+         aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="3"/>
+        <path d="m4 7 8 6 8-6"/>
+    </svg>
 
-                        <div class="input-wrapper">
-                            <span>✉</span>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="you@example.com"
-                                required
-                            >
-                        </div>
-
+    <input type="email" id="email" name="email"
+           placeholder="you@example.com"
+           autocomplete="email" required>
+</div>
                     </div>
 
-
                     <div class="form-group">
-
                         <div class="password-label">
-                            <label for="password">
-                                {{ lang['password_label'] }}
-                            </label>
-                            <a href="#">
+                            <label for="password">{{ lang['password_label'] }}</label>
+                            <a href="#" onclick="return false;">
                                 {{ lang['forgot_password'] }}
                             </a>
                         </div>
+<div class="input-wrapper">
+    <svg class="field-icon" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="1.7"
+         aria-hidden="true">
+        <rect x="4" y="10" width="16" height="11" rx="2"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+    </svg>
 
-                        <div class="input-wrapper">
-                            <span>🔒</span>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                placeholder="{{ lang['enter_details_continue'] }}"
-                                required
-                            >
-                            <button type="button" class="password-toggle" onclick="togglePassword()">
-                                ◉
-                            </button>
-                        </div>
+    <input type="password" id="password" name="password"
+           placeholder="{{ lang['password_label'] }}"
+           autocomplete="current-password" required>
 
+    <button type="button" class="password-toggle"
+            onclick="togglePassword()"
+            aria-label="Show password" aria-pressed="false">
+        ◉
+    </button>
+</div>
+                       
                     </div>
-
 
                     <div class="remember-row">
                         <label class="remember">
@@ -156,19 +686,14 @@
                         </label>
                     </div>
 
-
                     <button type="submit" class="auth-submit">
-                        {{ lang['sign_in'] }}
-                        <span>→</span>
+                        {{ lang['sign_in'] }} <span>→</span>
                     </button>
-
                 </form>
-
 
                 <div class="auth-divider">
                     <span>{{ lang['or_divider'] }}</span>
                 </div>
-
 
                 <div class="auth-register">
                     {{ lang['no_account_yet'] }}
@@ -176,23 +701,23 @@
                         {{ lang['create_account_link'] }}
                     </a>
                 </div>
-
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
         function togglePassword() {
             const password = document.getElementById("password");
             const button = document.querySelector(".password-toggle");
-            if (password.type === "password") {
-                password.type = "text";
-            } else {
-                password.type = "password";
-            }
+            const isHidden = password.type === "password";
+
+            password.type = isHidden ? "text" : "password";
+            button.setAttribute("aria-pressed", String(isHidden));
+            button.setAttribute(
+                "aria-label",
+                isHidden ? "Hide password" : "Show password"
+            );
         }
     </script>
-
 </body>
-
 </html>

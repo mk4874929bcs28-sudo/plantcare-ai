@@ -1,0 +1,771 @@
+
+<!DOCTYPE html>
+<html lang="{{ 'ta' if current_language == 'ta' else 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% if current_language == 'ta' %}
+            தாவரத்தைச் சேர் - PlantCare AI
+        {% else %}
+            Add Plant - PlantCare AI
+        {% endif %}
+    </title>
+
+    <style>
+        :root {
+            --bg: #050b07;
+            --card: rgba(14, 29, 19, 0.94);
+            --card-soft: #102319;
+            --border: rgba(111, 255, 151, 0.17);
+            --green: #9cff57;
+            --green-bright: #45ff91;
+            --text: #effff2;
+            --muted: #9bb6a2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 38px 18px;
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(ellipse at 8% 0%, rgba(37, 110, 58, .24), transparent 36%),
+                radial-gradient(ellipse at 100% 90%, rgba(22, 94, 48, .16), transparent 35%),
+                var(--bg);
+        }
+
+        .page-shell {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: linear-gradient(145deg, #193c25, #0d1e13);
+            font-size: 23px;
+            box-shadow: 0 0 25px rgba(69, 255, 145, .06);
+        }
+
+        .brand-name {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -.3px;
+        }
+
+        .brand-caption {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .admin-pill {
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--green);
+            background: rgba(40, 95, 54, .16);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .plant-form-card {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            background: var(--card);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, .34);
+            backdrop-filter: blur(16px);
+        }
+
+        .form-header {
+            position: relative;
+            overflow: hidden;
+            padding: 34px 38px 30px;
+            border-bottom: 1px solid var(--border);
+            background:
+                radial-gradient(ellipse at 92% 10%, rgba(69, 255, 145, .13), transparent 36%),
+                linear-gradient(125deg, #142b1c, #0d1b12);
+        }
+
+        .form-header::after {
+            content: "🌿";
+            position: absolute;
+            right: 40px;
+            top: 16px;
+            font-size: 82px;
+            opacity: .12;
+            transform: rotate(-18deg);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 13px;
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.7px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: clamp(27px, 4vw, 36px);
+            letter-spacing: -1.1px;
+            line-height: 1.4;
+        }
+
+        h1 span {
+            color: var(--green);
+        }
+
+        .form-header p {
+            position: relative;
+            z-index: 1;
+            max-width: 510px;
+            margin: 12px 0 0;
+            color: #abc3b0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .form-body {
+            padding: 30px 38px 34px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 22px;
+        }
+
+        .section-number {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            color: var(--green);
+            background: rgba(69, 255, 145, .07);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .section-heading p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 22px;
+        }
+
+        .field {
+            min-width: 0;
+            margin-bottom: 21px;
+        }
+
+        .field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 9px;
+            color: #dcefe0;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.7;
+        }
+
+        .required {
+            color: var(--green);
+        }
+
+        input,
+        textarea {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 14px 15px;
+            border: 1px solid #294332;
+            border-radius: 12px;
+            outline: none;
+            background: #09150d;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+
+        input {
+            min-height: 49px;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #718b78;
+        }
+
+        input:hover,
+        textarea:hover {
+            border-color: #3b6548;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--green-bright);
+            background: #0b1a10;
+            box-shadow: 0 0 0 3px rgba(69, 255, 145, .09);
+        }
+
+        textarea {
+            min-height: 135px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .field-hint {
+            margin: 8px 0 0;
+            color: #819b88;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .upload-box {
+            padding: 18px;
+            border: 1px dashed #41684b;
+            border-radius: 15px;
+            background: rgba(69, 255, 145, .035);
+            transition: border-color .2s, background .2s;
+        }
+
+        .upload-box:focus-within,
+        .upload-box:hover {
+            border-color: var(--green-bright);
+            background: rgba(69, 255, 145, .055);
+        }
+
+        .upload-intro {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-bottom: 15px;
+        }
+
+        .upload-icon {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 43px;
+            height: 43px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #14291b;
+            font-size: 20px;
+        }
+
+        .upload-intro strong {
+            display: block;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .upload-intro span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            border-color: #2b4933;
+            background: #08130c;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type="file"]::file-selector-button {
+            margin-right: 12px;
+            padding: 9px 12px;
+            border: 1px solid rgba(156, 255, 87, .24);
+            border-radius: 8px;
+            background: rgba(156, 255, 87, .10);
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: rgba(156, 255, 87, .19);
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            flex-wrap: wrap;
+        }
+
+        button,
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 47px;
+            padding: 13px 19px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.6;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, border-color .2s, background .2s;
+        }
+
+        button {
+            background: linear-gradient(135deg, #b0ff70, #52ef91);
+            color: #07130a;
+            box-shadow: 0 7px 22px rgba(69, 255, 145, .12);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(69, 255, 145, .22);
+        }
+
+        .back-link {
+            border-color: #304b37;
+            background: #14241a;
+            color: #d2e9d7;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            border-color: #65936e;
+            background: #1a3021;
+            color: var(--green);
+        }
+
+        button:focus-visible,
+        .back-link:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .topbar {
+                margin-bottom: 17px;
+            }
+
+            .plant-form-card {
+                border-radius: 19px;
+            }
+
+            .form-header {
+                padding: 27px 22px 25px;
+            }
+
+            .form-header::after {
+                right: 12px;
+                top: 16px;
+                font-size: 58px;
+            }
+
+            .form-body {
+                padding: 25px 22px 26px;
+            }
+
+            .form-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0;
+            }
+
+            .field.full-width {
+                grid-column: auto;
+            }
+
+            .form-footer {
+                align-items: stretch;
+            }
+
+            .footer-note {
+                margin-bottom: 4px;
+            }
+
+            .actions {
+                width: 100%;
+            }
+
+            button,
+            .back-link {
+                flex: 1;
+                padding: 12px 13px;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .admin-pill {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .brand-name {
+                font-size: 15px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            button,
+            .back-link {
+                width: 100%;
+                flex: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-shell">
+
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon">🌿</div>
+                <div>
+                    <p class="brand-name">PlantCare AI</p>
+
+                    <p class="brand-caption">
+                        {% if current_language == 'ta' %}
+                            தாவர அறிவு மேலாண்மை
+                        {% else %}
+                            Plant knowledge management
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <span class="admin-pill">
+                ⚙
+                {% if current_language == 'ta' %}
+                    நிர்வாகப் பகுதி
+                {% else %}
+                    Admin Panel
+                {% endif %}
+            </span>
+        </header>
+
+        <section class="plant-form-card">
+
+            <div class="form-header">
+                <div class="eyebrow">
+                    ✦
+                    {% if current_language == 'ta' %}
+                        தாவர நூலக மேலாண்மை
+                    {% else %}
+                        Plant Library Management
+                    {% endif %}
+                </div>
+
+                <h1>
+                    {% if current_language == 'ta' %}
+                        புதிய <span>தாவரம் சேர்</span>
+                    {% else %}
+                        Add New <span>Plant</span>
+                    {% endif %}
+                </h1>
+
+                <p>
+                    {% if current_language == 'ta' %}
+                        பயனுள்ள தாவரவியல் தகவல்கள் மற்றும் தெளிவான படத்துடன் உங்கள் தாவர நூலகத்தை விரிவுபடுத்துங்கள்.
+                    {% else %}
+                        Expand your plant library with useful botanical information
+                        and a clear plant image.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="form-body">
+
+                <div class="section-heading">
+                    <div class="section-number">01</div>
+                    <div>
+                        <h2>
+                            {% if current_language == 'ta' %}
+                                தாவரத் தகவல்கள்
+                            {% else %}
+                                Plant Information
+                            {% endif %}
+                        </h2>
+
+                        <p>
+                            {% if current_language == 'ta' %}
+                                உங்கள் தாவரத்தின் அடிப்படை விவரங்களை உள்ளிடவும்.
+                            {% else %}
+                                Enter the basic details of your plant.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST"
+                      action="{{ url_for('admin_add_plant') }}"
+                      enctype="multipart/form-data">
+
+                    <div class="form-grid">
+
+                        <div class="field">
+                            <label for="plant_name">
+                                {% if current_language == 'ta' %}
+                                    தாவரத்தின் பெயர்
+                                {% else %}
+                                    Plant Name
+                                {% endif %}
+                                <span class="required">*</span>
+                            </label>
+
+                            <input type="text"
+                                   id="plant_name"
+                                   name="plant_name"
+                                   maxlength="100"
+                                   placeholder="{% if current_language == 'ta' %}எ.கா. வேம்பு{% else %}e.g. Neem{% endif %}"
+                                   required>
+                        </div>
+
+                        <div class="field">
+                            <label for="tamil_name">
+                                {% if current_language == 'ta' %}
+                                    தமிழ் பெயர்
+                                {% else %}
+                                    Tamil Name
+                                {% endif %}
+                            </label>
+
+                            <input type="text"
+                                   id="tamil_name"
+                                   name="tamil_name"
+                                   placeholder="{% if current_language == 'ta' %}எ.கா. வேம்பு{% else %}e.g. வேம்பு{% endif %}">
+                        </div>
+
+                        <div class="field full-width">
+                            <label for="scientific_name">
+                                {% if current_language == 'ta' %}
+                                    அறிவியல் பெயர்
+                                {% else %}
+                                    Scientific Name
+                                {% endif %}
+                            </label>
+
+                            <input type="text"
+                                   id="scientific_name"
+                                   name="scientific_name"
+                                   placeholder="{% if current_language == 'ta' %}எ.கா. Azadirachta indica{% else %}e.g. Azadirachta indica{% endif %}">
+
+                            <p class="field-hint">
+                                {% if current_language == 'ta' %}
+                                    கிடைத்தால் தாவரத்தின் தாவரவியல் பெயரைச் சேர்க்கவும்.
+                                {% else %}
+                                    Add the botanical name if it is available.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="field full-width">
+                            <label for="description">
+                                {% if current_language == 'ta' %}
+                                    தாவர விளக்கம்
+                                {% else %}
+                                    Plant Description
+                                {% endif %}
+                            </label>
+
+                            <textarea id="description"
+                                      name="description"
+                                      placeholder="{% if current_language == 'ta' %}தாவரத்தின் பண்புகள், பயன்பாடுகள் அல்லது வளர்ப்பு முறைகளை விவரிக்கவும்...{% else %}Describe the plant, its characteristics, uses, or growing conditions...{% endif %}"></textarea>
+
+                            <p class="field-hint">
+                                {% if current_language == 'ta' %}
+                                    தெளிவான விளக்கம் பயனர்கள் தாவரத்தை நன்கு புரிந்துகொள்ள உதவும்.
+                                {% else %}
+                                    A clear description helps users understand the plant.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="field full-width">
+                            <label for="plant_image">
+                                {% if current_language == 'ta' %}
+                                    தாவரப் படம்
+                                {% else %}
+                                    Plant Image
+                                {% endif %}
+                                <span class="required">*</span>
+                            </label>
+
+                            <div class="upload-box">
+                                <div class="upload-intro">
+                                    <div class="upload-icon">📷</div>
+                                    <div>
+                                        <strong>
+                                            {% if current_language == 'ta' %}
+                                                தாவரப் படத்தைப் பதிவேற்றவும்
+                                            {% else %}
+                                                Upload a plant photo
+                                            {% endif %}
+                                        </strong>
+
+                                        <span>
+                                            {% if current_language == 'ta' %}
+                                                தாவரத்தின் தெளிவான படத்தைத் தேர்ந்தெடுக்கவும்.
+                                            {% else %}
+                                                Choose a clear image of the plant.
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <input type="file"
+                                       id="plant_image"
+                                       name="plant_image"
+                                       accept=".jpg,.jpeg,.png,.webp"
+                                       required>
+
+                                <p class="field-hint">
+                                    {% if current_language == 'ta' %}
+                                        ஆதரிக்கப்படும் பட வடிவங்கள்: JPG, JPEG, PNG மற்றும் WEBP.
+                                    {% else %}
+                                        Supported formats: JPG, JPEG, PNG and WEBP.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-footer">
+                        <div class="footer-note">
+                            <span>🛡️</span>
+                            <span>
+                                {% if current_language == 'ta' %}
+                                    <span class="required">*</span> குறியிட்ட புலங்கள் கட்டாயமானவை.
+                                {% else %}
+                                    Fields marked <span class="required">*</span> are required.
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="actions">
+                            <a class="back-link"
+                               href="{{ url_for('admin_dashboard') }}">
+                                ←
+                                {% if current_language == 'ta' %}
+                                    நிர்வாகப் பக்கத்திற்குத் திரும்பு
+                                {% else %}
+                                    Back to Admin
+                                {% endif %}
+                            </a>
+
+                            <button type="submit">
+                                🌱
+                                {% if current_language == 'ta' %}
+                                    தாவரத்தைச் சேர்
+                                {% else %}
+                                    Add Plant
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

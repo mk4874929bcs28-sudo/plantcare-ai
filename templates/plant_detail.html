@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ plant[1] }} Care Guide | PlantCare AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+
+:root {
+    --bg: #050e09;
+    --surface: #0b1911;
+    --surface-2: #10251a;
+    --border: rgba(65, 255, 128, 0.20);
+    --text: #edfff1;
+    --muted: #9ab5a1;
+    --green: #39ff88;
+    --green-dark: #12c968;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(circle at top left, #123321 0%, transparent 35%),
+        radial-gradient(ellipse at 100% 55%, #0a2617 0%, transparent 35%),
+        var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+.detail-container {
+    max-width: 1050px;
+    margin: auto;
+    padding: 35px 25px 80px;
+}
+
+/* BACK BUTTON */
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 650;
+    margin-bottom: 25px;
+    transition: .25s;
+}
+
+.back-button:hover {
+    transform: translateX(-3px);
+    border-color: var(--green);
+    color: var(--green);
+}
+
+/* PLANT HERO */
+
+.detail-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    background:
+        radial-gradient(circle at 90% 10%,
+            rgba(57,255,136,.12), transparent 35%),
+        linear-gradient(135deg, #102b1b, #09170f);
+    border-radius: 25px;
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 30px;
+    box-shadow: 0 15px 45px rgba(0,0,0,.25);
+    overflow: hidden;
+}
+
+.detail-hero::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    right: -80px;
+    top: -90px;
+    background: rgba(57,255,136,.09);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.plant-photo {
+    width: 300px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+.no-img {
+    width: 300px;
+    height: 250px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 90px;
+    background: linear-gradient(135deg, #173b26, #0b2013);
+    border: 1px solid var(--border);
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+}
+
+.small-label {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.detail-hero h1 {
+    font-size: 44px;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 14px;
+    overflow-wrap: anywhere;
+}
+
+.plant-id {
+    display: inline-block;
+    padding: 7px 13px;
+    background: rgba(57,255,136,.09);
+    color: var(--green);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+/* GUIDE HEADING */
+
+.guide-heading {
+    margin: 30px 0 20px;
+}
+
+.guide-heading h2 {
+    font-size: 28px;
+    color: var(--text);
+    margin-bottom: 7px;
+}
+
+.guide-heading p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* DISEASE CARD */
+
+.disease-card {
+    background: linear-gradient(145deg, #102319, #09160f);
+    border: 1px solid var(--border);
+    border-radius: 21px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.20);
+    transition: .25s;
+}
+
+.disease-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(57,255,136,.38);
+    box-shadow: 0 14px 35px rgba(0,0,0,.28);
+}
+
+.disease-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.disease-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-width: 0;
+}
+
+.disease-icon {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: rgba(57,255,136,.10);
+    border: 1px solid var(--border);
+    font-size: 23px;
+}
+
+.disease-title h3 {
+    color: var(--green);
+    font-size: 21px;
+    overflow-wrap: anywhere;
+}
+
+.disease-number {
+    padding: 6px 11px;
+    border-radius: 20px;
+    background: rgba(57,255,136,.08);
+    border: 1px solid var(--border);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* INFORMATION GRID */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.info-box {
+    min-width: 0;
+    padding: 18px;
+    border-radius: 15px;
+    background: rgba(57,255,136,.035);
+    border: 1px solid rgba(57,255,136,.12);
+}
+
+.info-box h4 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    color: var(--green);
+    margin-bottom: 10px;
+}
+
+.info-box p {
+    color: #c0d4c6;
+    font-size: 14px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+/* TAMIL CONTENT */
+
+.info-box p[style],
+.disease-title div[style] {
+    color: var(--green) !important;
+}
+
+/* EMPTY STATE */
+
+.empty-guide {
+    text-align: center;
+    background: var(--surface);
+    border-radius: 22px;
+    padding: 50px 25px;
+    border: 1px solid var(--border);
+}
+
+.empty-guide .empty-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+.empty-guide h3 {
+    color: var(--green);
+    margin-bottom: 8px;
+}
+
+.empty-guide p {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+    .detail-container {
+        padding: 24px 17px 55px;
+    }
+
+    .detail-hero {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+        padding: 20px;
+    }
+
+    .plant-photo,
+    .no-img {
+        width: 100%;
+        max-width: none;
+        height: 240px;
+    }
+
+    .hero-content {
+        text-align: center;
+    }
+
+    .detail-hero h1 {
+        font-size: 36px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .disease-card {
+        padding: 19px;
+    }
+
+    .disease-header {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-hero h1 {
+        font-size: 30px;
+    }
+
+    .guide-heading h2 {
+        font-size: 23px;
+    }
+
+    .disease-header {
+        flex-direction: column;
+    }
+
+    .disease-title h3 {
+        font-size: 18px;
+    }
+
+    .disease-number {
+        align-self: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: .01ms !important;
+    }
+}
+
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="detail-container">
+
+    <!-- Back -->
+
+    <a href="{{ url_for('plant_library') }}"
+       class="back-button">
+
+        ← Back to Plant Library
+
+    </a>
+
+
+    <!-- Plant Hero -->
+
+    <div class="detail-hero">
+
+        <!-- PHOTO -->
+
+        {% if plant[2] %}
+    <img
+        class="plant-photo"
+        src="{{ url_for('static', filename=plant[2]) }}"
+        alt="{{ plant[1] }}"
+        onerror="this.style.display='none';"
+    >
+{% else %}
+    <div class="no-img">🌱</div>
+{% endif %}
+
+        <div class="hero-content">
+
+            <div class="small-label">
+                🌿 PlantCare AI
+            </div>
+
+            <h1>
+                {{ plant[1] }}
+            </h1>
+
+            <span class="plant-id">
+                Plant ID: {{ plant[0] }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- Heading -->
+
+    <div class="guide-heading">
+
+        <h2>
+            🌱 {{ plant[1] }} Care Guide
+        </h2>
+
+        <p>
+            Disease information, recommended remedies and prevention guidance
+        </p>
+
+    </div>
+
+
+    <!-- Diseases -->
+
+    {% if diseases %}
+
+        {% for disease in diseases %}
+
+        <div class="disease-card">
+
+            <div class="disease-header">
+
+                <div class="disease-title">
+
+                    <div class="disease-icon">
+                        🦠
+                    </div>
+
+                    <h3>
+                        {{ disease[0] }}
+                    </h3>
+                    {% if current_language == "ta" and tamil_guide.get(disease[0]) %}
+    <div style="color:#15803d; font-size:15px; margin-top:4px;">
+        {{ tamil_guide[disease[0]]["name"] }}
+    </div>
+{% endif %}
+
+                </div>
+
+                <div class="disease-number">
+                    Disease {{ loop.index }}
+                </div>
+
+            </div>
+
+
+            <div class="info-grid">
+
+                <!-- Description -->
+
+                <div class="info-box">
+
+    <h4>
+        📋 Description
+    </h4>
+
+    <p>
+        {{ disease[1] or "No description available." }}
+    </p>
+
+    {% if current_language == "ta" and tamil_guide.get(disease[0]) %}
+        <p style="color:#15803d; margin-top:8px;">
+            {{ tamil_guide[disease[0]]["description"] }}
+        </p>
+    {% endif %}
+
+</div>
+
+
+                <!-- Remedy -->
+
+                <div class="info-box">
+
+    <h4>
+        💊 Recommended Remedy
+    </h4>
+
+    <p>
+        {{ disease[2] or "No remedy information available." }}
+    </p>
+
+    {% if current_language == "ta" and tamil_guide.get(disease[0]) %}
+        <p style="color:#15803d; margin-top:8px;">
+            {{ tamil_guide[disease[0]]["remedy"] }}
+        </p>
+    {% endif %}
+
+</div>
+
+                <!-- Prevention -->
+
+                <div class="info-box">
+
+    <h4>
+        🛡️ Prevention
+    </h4>
+
+    <p>
+        {{ disease[3] or "No prevention information available." }}
+    </p>
+
+    {% if current_language == "ta" and tamil_guide.get(disease[0]) %}
+        <p style="color:#15803d; margin-top:8px;">
+            {{ tamil_guide[disease[0]]["prevention"] }}
+        </p>
+    {% endif %}
+
+</div>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-guide">
+
+            <div class="empty-icon">
+                🌿
+            </div>
+
+            <h3>
+                Care guidance coming soon
+            </h3>
+
+            <p>
+                No disease information is currently available
+                for this plant.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
