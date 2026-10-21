@@ -632,7 +632,15 @@
                     <h2>{{ lang['sign_in_to_account'] }}</h2>
                     <p>{{ lang['enter_details_continue'] }}</p>
                 </div>
-
+                {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <p class="flash-message">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
                 <form method="POST" action="{{ url_for('login') }}">
                     <div class="form-group">
                         <label for="email">{{ lang['email_address'] }}</label>

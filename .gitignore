@@ -1,37 +1,16 @@
-# Python
+.env
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Virtual environment
 venv/
-.venv/
-env/
-PlantCareEnv/
-
-# Flask
-instance/
-
-# Uploaded images
-static/uploads/*
-
-# Dataset
+static/uploads/
+static/profile_photos/
 dataset/
-
-# Large ML files
-*.h5
-*.hdf5
-
-# IDE
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment / secrets
-.env
-
-# Python cache
-.pytest_cache/
+ABOUT_ALL/
+assignment/
+Plant Disease Detection and Remedy System/
+app_backup.py
+app_oracle_backup.py
+migrate_oracle_to_pg.py
+a.py
+convert.py
+test_tflite.py

@@ -1,16 +1,21 @@
-import psycopg
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_babel import Babel,get_locale
-from dotenv import load_dotenv
 
-load_dotenv()
-import oracledb
 import os
+
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+from dotenv import load_dotenv
+load_dotenv()
+import re
+import psycopg2
+import psycopg2.extensions
 import uuid
 import cv2
 import numpy as np
+
 from PIL import Image
-import tensorflow as tf
+
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -639,11 +644,23 @@ TRANSLATIONS["ta"].update(TA_ADDITIONS)
 # LOAD TRAINED PLANT DISEASE MODEL
 # ============================================================
 
-MODEL_PATH = "plant_disease_model.keras"
+MODEL_PATH = "plant_disease_model.tflite"
 CLASS_NAMES_PATH = "class_names.txt"
+import threading
+from ai_edge_litert.interpreter import Interpreter
 
-model = tf.keras.models.load_model(MODEL_PATH)
+interpreter = Interpreter(model_path=MODEL_PATH)
+interpreter.allocate_tensors()
+_inp = interpreter.get_input_details()[0]
+_out = interpreter.get_output_details()[0]
+_lock = threading.Lock()
 
+def run_model(x):
+    with _lock:
+        interpreter.set_tensor(_inp["index"], x.astype("float32"))
+        interpreter.invoke()
+        return interpreter.get_tensor(_out["index"]).copy()
+print("Model output shape:",_out["shape"])
 with open(CLASS_NAMES_PATH, "r") as f:
     class_names = [line.strip() for line in f.readlines()]
 
@@ -670,7 +687,10 @@ def allowed_profile_image(filename):
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in ALLOWED_PROFILE_EXTENSIONS
     )
-app.secret_key = "plantcare-ai-secret-key"
+app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
+if os.getenv("IS_HOSTED"):
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = True
 app.config["BABEL_DEFAULT_LOCALE"] = "en"
 app.config["BABEL_SUPPORTED_LOCALES"] = ["en", "ta"]
 
@@ -711,7 +731,7 @@ def notifications():
             notifications=notification_list
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
         print("Notification Error:", error)
         return redirect(url_for("dashboard"))
 
@@ -754,7 +774,7 @@ def mark_notification_read(notification_id):
             url_for("notifications")
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print(
             "Mark Notification Read Error:",
@@ -809,7 +829,7 @@ def mark_all_notifications_read():
             url_for("notifications")
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print(
             "Mark All Notifications Read Error:",
@@ -835,11 +855,11 @@ babel = Babel(
     app,
     locale_selector=get_user_locale
 )
+load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+print("Database URL loaded:", bool(DATABASE_URL))
 
-ORACLE_USER = os.getenv("ORACLE_USER")
-ORACLE_PASSWORD = os.getenv("ORACLE_PASSWORD")
-ORACLE_DSN = os.getenv("ORACLE_DSN")
 # ==========================================
 # LANGUAGE SWITCH
 # ==========================================
@@ -870,15 +890,67 @@ def inject_language():
 
 
 # ============================================================
-# ORACLE DATABASE CONNECTION
+# POSTGRESQL DATABASE CONNECTION (Neon)
+# Oracle-style SQL in this file is auto-translated by PGCursor
 # ============================================================
 
-def get_db_connection():
-    return oracledb.connect(
-        user=ORACLE_USER,
-        password=ORACLE_PASSWORD,
-        dsn=ORACLE_DSN
+# NUMERIC -> float (Oracle returned floats; keeps templates working)
+_DEC2FLOAT = psycopg2.extensions.new_type(
+    psycopg2.extensions.DECIMAL.values,
+    "DEC2FLOAT",
+    lambda value, cur: float(value) if value is not None else None
+)
+psycopg2.extensions.register_type(_DEC2FLOAT)
+
+
+def _oracle_to_pg(sql, has_params):
+    sql = re.sub(r"\bNVL\s*\(", "COALESCE(", sql, flags=re.I)
+    sql = re.sub(r"\bSYSTIMESTAMP\b", "NOW()", sql, flags=re.I)
+    sql = re.sub(r"\bSYSDATE\b", "NOW()", sql, flags=re.I)
+    sql = re.sub(r"NOTIFICATIONS_SEQ\.NEXTVAL", "nextval('notifications_seq')", sql, flags=re.I)
+    sql = re.sub(
+        r"FETCH\s+FIRST\s+(\d+)\s+ROWS?\s+ONLY",
+        r"LIMIT \1", sql, flags=re.I
     )
+    if has_params:
+        sql = sql.replace("%", "%%")
+        sql = re.sub(r"(?<![:\w]):([A-Za-z_]\w*)", r"%(\1)s", sql)
+    return sql
+
+
+class PGCursor(psycopg2.extensions.cursor):
+    def execute(self, sql, vars=None):
+        return super().execute(_oracle_to_pg(sql, vars is not None), vars)
+
+
+import time
+
+def get_db_connection():
+    last_error = None
+
+    for attempt in range(3):
+        try:
+            conn = psycopg2.connect(
+                DATABASE_URL,
+                cursor_factory=PGCursor,
+                connect_timeout=15,
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=5
+            )
+            with conn.cursor() as cur:
+                cur.execute("SET TIME ZONE 'Asia/Kolkata'")
+            conn.commit()
+            return conn
+        except psycopg2.OperationalError as error:
+            last_error = error
+            print(f"DB connect attempt {attempt + 1} failed:", error)
+            time.sleep(2)
+
+    raise last_error
+
+
 def add_notification(
     cursor,
     user_id,
@@ -950,7 +1022,8 @@ def notify_all_admins(
 def estimate_severity(image_path):
     """
     Experimental visual estimate only.
-    This does not provide a validated plant-disease severity diagnosis.
+    Yellow/brown pixels are a proxy for possible damage,
+    not a validated plant-disease severity diagnosis.
     """
     image = cv2.imread(image_path)
 
@@ -961,56 +1034,158 @@ def estimate_severity(image_path):
             "note": "Image could not be analyzed."
         }
 
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (224, 224))
+    # Resize while preserving the image proportions
+    h0, w0 = image.shape[:2]
+    scale = min(600 / max(h0, w0), 1.0)
 
-    # Approximate green leaf pixels in HSV color space
-    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    new_w = max(1, int(w0 * scale))
+    new_h = max(1, int(h0 * scale))
+    image = cv2.resize(image, (new_w, new_h))
 
-    lower_green = np.array([25, 25, 20])
-    upper_green = np.array([100, 255, 255])
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    green_mask = cv2.inRange(hsv, lower_green, upper_green)
+    # Approximate green pixels to locate the leaf
+    green_mask = cv2.inRange(
+        hsv,
+        np.array([25, 25, 20]),
+        np.array([100, 255, 255])
+    )
 
-    # Approximate leaf region; not a reliable leaf segmentation model
-    leaf_pixels = cv2.countNonZero(green_mask)
-    total_pixels = image.shape[0] * image.shape[1]
+    contours, _ = cv2.findContours(
+        green_mask,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
 
-    if leaf_pixels < total_pixels * 0.05:
+    if not contours:
         return {
             "severity": "Unable to estimate",
             "affected_percentage": None,
             "note": "A clear leaf region could not be identified."
         }
 
-    # Non-green pixels inside the estimated leaf bounding region
-    contours, _ = cv2.findContours(
-        green_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
-
     largest = max(contours, key=cv2.contourArea)
+
+    image_area = image.shape[0] * image.shape[1]
+
+    if cv2.contourArea(largest) < image_area * 0.02:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "The leaf region is too small or unclear."
+        }
+
+    # Approximate bounding box around the largest green region
     x, y, w, h = cv2.boundingRect(largest)
 
-    region = image[y:y+h, x:x+w]
-    region_hsv = cv2.cvtColor(region, cv2.COLOR_RGB2HSV)
+    pad = int(0.08 * max(w, h))
 
-    green_region = cv2.inRange(
-        region_hsv,
-        np.array([25, 25, 20]),
-        np.array([100, 255, 255])
+    x1 = max(0, x - pad)
+    y1 = max(0, y - pad)
+    x2 = min(image.shape[1], x + w + pad)
+    y2 = min(image.shape[0], y + h + pad)
+
+    crop = image[y1:y2, x1:x2].copy()
+
+    if crop.shape[0] < 3 or crop.shape[1] < 3:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "The estimated leaf region is too small."
+        }
+
+    # Refine approximate leaf/background segmentation
+    mask = np.zeros(crop.shape[:2], np.uint8)
+    bg_model = np.zeros((1, 65), np.float64)
+    fg_model = np.zeros((1, 65), np.float64)
+
+    rect = (
+        1,
+        1,
+        crop.shape[1] - 2,
+        crop.shape[0] - 2
     )
 
-    region_pixels = region.shape[0] * region.shape[1]
-    green_pixels = cv2.countNonZero(green_region)
+    try:
+        cv2.grabCut(
+            crop,
+            mask,
+            rect,
+            bg_model,
+            fg_model,
+            5,
+            cv2.GC_INIT_WITH_RECT
+        )
+    except cv2.error:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "Leaf segmentation failed; try a clearer image."
+        }
 
-    # Non-green pixels are NOT necessarily diseased tissue.
-    # This is only an experimental colour-based proxy.
-    estimated_non_green = max(0, region_pixels - green_pixels)
-    percentage = (estimated_non_green / max(region_pixels, 1)) * 100
+    leaf_mask = np.where(
+        (mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD),
+        255,
+        0
+    ).astype(np.uint8)
 
-    if percentage < 15:
+    leaf_pixels = cv2.countNonZero(leaf_mask)
+
+    if leaf_pixels < 100:
+        return {
+            "severity": "Unable to estimate",
+            "affected_percentage": None,
+            "note": "Leaf segmentation was not reliable."
+        }
+
+    crop_hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+
+    # Approximate yellow regions
+    yellow_mask = cv2.inRange(
+        crop_hsv,
+        np.array([15, 35, 35]),
+        np.array([38, 255, 255])
+    )
+
+    # Approximate brown regions
+    brown_mask = cv2.inRange(
+        crop_hsv,
+        np.array([5, 40, 20]),
+        np.array([25, 255, 180])
+    )
+
+    possible_damage = cv2.bitwise_or(
+        yellow_mask,
+        brown_mask
+    )
+
+    # Reduce small isolated colour noise
+    kernel = np.ones((3, 3), np.uint8)
+
+    possible_damage = cv2.morphologyEx(
+        possible_damage,
+        cv2.MORPH_OPEN,
+        kernel
+    )
+
+    # Count possible yellow/brown pixels inside the leaf mask
+    damage_inside_leaf = cv2.bitwise_and(
+        possible_damage,
+        possible_damage,
+        mask=leaf_mask
+    )
+
+    damage_pixels = cv2.countNonZero(damage_inside_leaf)
+
+    percentage = min(
+        100.0,
+        (damage_pixels / leaf_pixels) * 100
+    )
+
+    # Provisional thresholds; validate against labelled images
+    if percentage < 10:
         severity = "MILD"
-    elif percentage < 35:
+    elif percentage < 25:
         severity = "MODERATE"
     else:
         severity = "SEVERE"
@@ -1019,8 +1194,9 @@ def estimate_severity(image_path):
         "severity": severity,
         "affected_percentage": round(percentage, 1),
         "note": (
-            "Experimental colour estimate only; lighting, leaf colour, "
-            "background and natural leaf features can affect this result."
+            "Experimental estimate of yellow/brown area within the "
+            "segmented leaf. Natural coloration, lighting and shadows "
+            "may affect results; this is not a validated diagnosis."
         )
     }
 # ============================================================
@@ -1033,11 +1209,10 @@ def predict_disease(image_path):
 
     image = image.resize((224, 224))
 
-    image_array = np.array(image, dtype=np.float32)
-
+    image_array = np.array(image, dtype=np.float32) / 255.0
     image_array = np.expand_dims(image_array, axis=0)
 
-    prediction = model.predict(image_array, verbose=0)
+    prediction = run_model(image_array)
 
     predicted_index = np.argmax(prediction[0])
 
@@ -1154,9 +1329,9 @@ def login():
                 url_for("login")
             )
 
-        except oracledb.Error as error:
+        except psycopg2.Error as error:
 
-            print("Oracle Error:", error)
+            print("Database Error:", error)
 
             if connection:
                 connection.rollback()
@@ -1233,11 +1408,11 @@ def register():
 
         try:
 
-            print("Connecting to Oracle...")
+            print("Connecting to database...")
 
             connection = get_db_connection()
 
-            print("Oracle connected!")
+            print("Database connected!")
 
             cursor = connection.cursor()
 
@@ -1311,14 +1486,14 @@ def register():
                 url_for("login")
             )
 
-        except oracledb.Error as error:
+        except psycopg2.Error as error:
 
-            print("ORACLE ERROR:", error)
+            print("DATABASE ERROR:", error)
 
             if connection:
                 connection.rollback()
 
-            return f"Oracle error: {error}"
+            return f"database error: {error}"
 
         except Exception as error:
 
@@ -1434,10 +1609,8 @@ def dashboard():
 # ------------------------------------------
 
         cursor.execute("""
-        SELECT
-        TRUNC(SYSDATE) - LEVEL + 1 AS prediction_date
-        FROM dual
-        CONNECT BY LEVEL <= 7
+        SELECT (CURRENT_DATE - g) AS prediction_date
+        FROM generate_series(6, 0, -1) AS g
         ORDER BY prediction_date""")
 
         date_rows = cursor.fetchall()
@@ -1445,13 +1618,13 @@ def dashboard():
 # Get prediction counts for the last 7 days
         cursor.execute("""
         SELECT
-        TRUNC(predicted_at) AS prediction_date,
+        CAST(predicted_at AS DATE) AS prediction_date,
         COUNT(*) AS prediction_count
         FROM PREDICTION_HISTORY
         WHERE user_id = :user_id
-        AND predicted_at >= TRUNC(SYSDATE) - 6
-        AND predicted_at < TRUNC(SYSDATE) + 1
-        GROUP BY TRUNC(predicted_at)
+        AND predicted_at >= CURRENT_DATE - 6
+        AND predicted_at < CURRENT_DATE + 1
+        GROUP BY CAST(predicted_at AS DATE)
         """, {
         "user_id": user_id
         })
@@ -1459,7 +1632,7 @@ def dashboard():
 
 # Store database counts using the date as the key
         prediction_counts = {
-            row[0].date(): row[1]
+            row[0]: row[1]
             for row in count_rows
         }
 
@@ -1468,7 +1641,7 @@ def dashboard():
         activity_counts = []
 
         for row in date_rows:
-            prediction_date = row[0].date()
+            prediction_date = row[0]
 
             activity_labels.append(
             prediction_date.strftime("%d %b")
@@ -1687,7 +1860,7 @@ def dashboard():
 
     activity_counts=activity_counts
 )
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print("Dashboard Error:", error)
 
@@ -2191,7 +2364,7 @@ def history():
             history=history_data
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print("History Error:", error)
 
@@ -2255,7 +2428,7 @@ def prediction_details(prediction_id):
             prediction=prediction
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
         print("Prediction Details Error:", error)
         flash("Unable to load prediction details.")
         return redirect(url_for("history"))
@@ -2506,7 +2679,7 @@ def admin_dashboard():
             users=users
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print(
             "Admin Dashboard Oracle Error:",
@@ -2620,7 +2793,7 @@ def admin_send_message():
             url_for("admin_dashboard")
         )
 
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print(
             "Admin Message Oracle Error:",
@@ -2829,8 +3002,7 @@ PLANT_DETAILS = {
 
 @app.route("/update-plant-details")
 def update_plant_details():
- 
-    if "user_id" not in session:
+    if session.get("role") != "ADMIN":
         return redirect(url_for("login"))
  
     connection = None
@@ -2964,7 +3136,7 @@ def plant_detail(plant_id):
             diseases=diseases,
             tamil_guide=TAMIL_GUIDE
             )
-    except oracledb.Error as error:
+    except psycopg2.Error as error:
 
         print("Plant Detail Error:", error)
         flash("Unable to load plant details.")
