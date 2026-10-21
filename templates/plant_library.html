@@ -762,22 +762,14 @@ body {
  
   <div class="card-header">
 
-        {% if plant[5] %}
-        <img
-            src="data:image/jpeg;base64,{{ plant[5] }}"
-            alt="{{ plant[1] }}"
-            class="plant-photo"
-        >
+            {% if plant[5] %}
+        <img src="data:image/jpeg;base64,{{ plant[5] }}"
+             alt="{{ plant[1] }}" class="plant-photo">
     {% elif plant[4] %}
-        <img
-            src="{{ url_for('static', filename='plant_images/' + plant[1]|lower + '.jpg') }}"
-            alt="{{ plant[1] }}"
-            class="plant-photo"
-        >
+        <img src="{{ url_for('static', filename='plant_images/' + plant[1]|lower + '.jpg') }}"
+             alt="{{ plant[1] }}" class="plant-photo">
     {% else %}
-        <div class="plant-avatar">
-            🌱
-        </div>
+        <div class="plant-avatar">🌱</div>
     {% endif %}
 
     <div class="plant-number">

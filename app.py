@@ -2466,7 +2466,8 @@ def plant_library():
                 plant_name,
                 tamil_name,
                 scientific_name,
-                image_path
+                image_path,
+                image_data
             FROM PLANTS
             ORDER BY plant_id
         """)
