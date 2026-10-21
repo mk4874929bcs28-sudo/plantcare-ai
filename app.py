@@ -25,7 +25,15 @@ def make_thumbnail_base64(path, max_width=400, quality=70):
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=quality)
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
-
+def file_to_base64(file_storage, max_width=500, quality=75):
+    with Image.open(file_storage.stream) as img:
+        img = img.convert("RGB")
+        if img.width > max_width:
+            ratio = max_width / float(img.width)
+            img = img.resize((max_width, int(img.height * ratio)))
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=quality)
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -3199,7 +3207,6 @@ def admin_add_plant():
 
     connection = None
     cursor = None
-    image_path = None
 
     try:
         plant_name = request.form.get("plant_name", "").strip()
@@ -3231,28 +3238,14 @@ def admin_add_plant():
             flash("Upload JPG, JPEG, PNG or WEBP image.")
             return redirect(url_for("admin_dashboard"))
 
-        # Save image inside static/plant-images
-        upload_folder = os.path.join(
-            app.root_path, "static", "plant-images"
-        )
-        os.makedirs(upload_folder, exist_ok=True)
-
-        extension = original_name.rsplit(".", 1)[1].lower()
-        filename = f"{uuid.uuid4().hex}.{extension}"
-        image_path = os.path.join(upload_folder, filename)
-
-        image.save(image_path)
-
-        # Store a path relative to the static folder
-        database_image_path = f"plant-images/{filename}"
+        # Image-a disk la save pannama, DB kulla base64 ah store
+        image_data = file_to_base64(image)
 
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Use the existing Oracle sequence if one exists;
-        # otherwise, generate an ID from the current maximum.
         cursor.execute("""
-            SELECT NVL(MAX(PLANT_ID), 0) + 1
+            SELECT COALESCE(MAX(PLANT_ID), 0) + 1
             FROM PLANTS
         """)
         new_plant_id = cursor.fetchone()[0]
@@ -3265,16 +3258,18 @@ def admin_add_plant():
                 CREATED_AT,
                 TAMIL_NAME,
                 SCIENTIFIC_NAME,
-                IMAGE_PATH
+                IMAGE_PATH,
+                IMAGE_DATA
             )
             VALUES (
                 :plant_id,
                 :plant_name,
                 :description,
-                SYSTIMESTAMP,
+                NOW(),
                 :tamil_name,
                 :scientific_name,
-                :image_path
+                :image_path,
+                :image_data
             )
         """, {
             "plant_id": new_plant_id,
@@ -3282,12 +3277,11 @@ def admin_add_plant():
             "description": description or None,
             "tamil_name": tamil_name or None,
             "scientific_name": scientific_name or None,
-            "image_path": database_image_path
+            "image_path": "",
+            "image_data": image_data
         })
 
         connection.commit()
-        image_path = None  # Keep uploaded file after successful insert
-
         flash(f"{plant_name} added to Plant Library successfully!")
 
     except Exception as error:
@@ -3295,9 +3289,6 @@ def admin_add_plant():
 
         if connection:
             connection.rollback()
-
-        if image_path and os.path.exists(image_path):
-            os.remove(image_path)
 
         flash("Unable to add plant. Please check the application logs.")
 
@@ -3308,7 +3299,6 @@ def admin_add_plant():
             connection.close()
 
     return redirect(url_for("admin_dashboard"))
-
 
 # ============================================================
 # RUN APPLICATION
