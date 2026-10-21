@@ -2168,26 +2168,30 @@ def predict():
         # ==========================================
 # STEP 6: SAVE PREDICTION HISTORY
 # ==========================================
-            cursor.execute(
-                """
-                INSERT INTO PREDICTION_HISTORY
-                (user_id, plant_name, disease_name, confidence,
-                 image_path, severity_level, image_data)
-                VALUES
-                (:user_id, :plant_name, :disease_name, :confidence,
-                 :image_path, :severity_level, :image_data)
-                """,
-                {
-                    "user_id": session["user_id"],
-                    "plant_name": plant_name,
-                    "disease_name": database_disease_name,
-                    "confidence": round(confidence, 2),
-                    "image_path": image_path.replace("\\", "/"),
-                    "severity_level": severity_result["severity"],
-                    "image_data": image_data
-                }
-            )
-            print("Prediction history with severity saved successfully!")
+                    # ==========================================
+        # STEP 6: SAVE PREDICTION HISTORY
+        # ==========================================
+
+        cursor.execute(
+            """
+            INSERT INTO PREDICTION_HISTORY
+            (user_id, plant_name, disease_name, confidence,
+             image_path, severity_level, image_data)
+            VALUES
+            (:user_id, :plant_name, :disease_name, :confidence,
+             :image_path, :severity_level, :image_data)
+            """,
+            {
+                "user_id": session["user_id"],
+                "plant_name": plant_name,
+                "disease_name": database_disease_name,
+                "confidence": round(confidence, 2),
+                "image_path": image_path.replace("\\", "/"),
+                "severity_level": severity_result["severity"],
+                "image_data": image_data
+            }
+        )
+        print("Prediction history saved successfully!")
 
         # ==========================================
         # STEP 7: CREATE NOTIFICATION DATA
@@ -2353,9 +2357,6 @@ def history():
         history_data = cursor.fetchall()
 
         print("HISTORY ROWS FOUND:", len(history_data))
-
-        for row in history_data:
-            print("HISTORY:", row)
 
         return render_template(
             "history.html",
