@@ -1,0 +1,13 @@
+.git
+__pycache__
+*.pyc
+venv
+.env
+app_backup.py
+app_oracle_backup.py
+a.py
+migrate_oracle_to_pg.py
+train_model.py
+README.md
+assignment/
+components/

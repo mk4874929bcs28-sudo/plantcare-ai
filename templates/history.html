@@ -549,18 +549,16 @@
                          data-search="{{ (item[2] or '') }} {{ (item[3] or '') }}">
 
                     <div class="image-container">
-                        {% if item[5] %}
-                            <img
-                                src="{{ url_for('static', filename=item[5].replace('static/', '')) }}"
-                                alt="{{ item[2] }} - {{ item[3] }}"
-                                class="history-image"
-                                loading="lazy"
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
-                            >
-                            <div class="image-fallback" style="display:none;">🌿</div>
-                        {% else %}
-                            <div class="image-fallback">🌿</div>
-                        {% endif %}
+                        {% if item[7] %}
+    <img
+        src="data:image/jpeg;base64,{{ item[7] }}"
+        alt="{{ item[2] }} - {{ item[3] }}"
+        class="history-image"
+        loading="lazy"
+    >
+{% else %}
+    <div class="image-fallback">🌿</div>
+{% endif %}
                         <span class="id-badge">#{{ item[0] }}</span>
                     </div>
 

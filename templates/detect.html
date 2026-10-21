@@ -1321,21 +1321,21 @@ button:disabled {
 
             <div class="result-main">
 
-                {% if latest_prediction.image_path %}
+               {% if latest_prediction.image_data %}
 
-                <img
-                    src="{{ url_for('static', filename=latest_prediction.image_path.replace('static/', '')) }}"
-                    class="result-image"
-                    alt="{{ lang.get('analyzed_plant', 'Analyzed plant') }}"
-                >
+<img
+    src="data:image/jpeg;base64,{{ latest_prediction.image_data }}"
+    class="result-image"
+    alt="{{ lang.get('analyzed_plant', 'Analyzed plant') }}"
+>
 
-                {% else %}
+{% else %}
 
-                <div class="result-image" style="display:flex;align-items:center;justify-content:center;font-size:60px;">
-                    🌿
-                </div>
+<div class="result-image" style="display:flex;align-items:center;justify-content:center;font-size:60px;">
+    🌿
+</div>
 
-                {% endif %}
+{% endif %} 
 
 
                 <div class="result-content">

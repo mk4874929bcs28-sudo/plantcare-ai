@@ -13,8 +13,18 @@ import psycopg2.extensions
 import uuid
 import cv2
 import numpy as np
-
+import base64
+import io
 from PIL import Image
+def make_thumbnail_base64(path, max_width=400, quality=70):
+    with Image.open(path) as img:
+        img = img.convert("RGB")
+        if img.width > max_width:
+            ratio = max_width / float(img.width)
+            img = img.resize((max_width, int(img.height * ratio)))
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=quality)
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1922,7 +1932,7 @@ def predict():
         # ==========================================
 
         predicted_class, confidence = predict_disease(image_path)
-
+        image_data = make_thumbnail_base64(image_path)
 # Clean the predicted class name before checking its status
         if "___" in predicted_class:
             plant_name, disease_name = predicted_class.split("___", 1)
@@ -2158,27 +2168,14 @@ def predict():
         # ==========================================
 # STEP 6: SAVE PREDICTION HISTORY
 # ==========================================
-
             cursor.execute(
                 """
                 INSERT INTO PREDICTION_HISTORY
-                (
-                    user_id,
-                    plant_name,
-                    disease_name,
-                    confidence,
-                    image_path,
-                    severity_level
-                )
+                (user_id, plant_name, disease_name, confidence,
+                 image_path, severity_level, image_data)
                 VALUES
-                (
-                    :user_id,
-                    :plant_name,
-                    :disease_name,
-                    :confidence,
-                    :image_path,
-                    :severity_level
-                )
+                (:user_id, :plant_name, :disease_name, :confidence,
+                 :image_path, :severity_level, :image_data)
                 """,
                 {
                     "user_id": session["user_id"],
@@ -2186,10 +2183,10 @@ def predict():
                     "disease_name": database_disease_name,
                     "confidence": round(confidence, 2),
                     "image_path": image_path.replace("\\", "/"),
-                    "severity_level": severity_result["severity"]
+                    "severity_level": severity_result["severity"],
+                    "image_data": image_data
                 }
             )
-
             print("Prediction history with severity saved successfully!")
 
         # ==========================================
@@ -2261,6 +2258,7 @@ def predict():
                 "\\",
                 "/"
             ),
+            "image_data": image_data,
 
             "description": description,
 
@@ -2342,7 +2340,7 @@ def history():
                 disease_name,
                 confidence,
                 image_path,
-                predicted_at
+                predicted_at,image_data
             FROM PREDICTION_HISTORY
             WHERE user_id = :user_id
             ORDER BY predicted_at DESC
