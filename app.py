@@ -1219,7 +1219,7 @@ def predict_disease(image_path):
 
     image = image.resize((224, 224))
 
-    image_array = np.array(image, dtype=np.float32) / 255.0
+    image_array = np.array(image, dtype=np.float32)
     image_array = np.expand_dims(image_array, axis=0)
 
     prediction = run_model(image_array)
